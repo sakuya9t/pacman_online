@@ -15,6 +15,7 @@
 import re
 import sys
 
+
 class TestParser(object):
 
     def __init__(self, path):
@@ -45,7 +46,7 @@ class TestParser(object):
         lines = test_text.split('\n')
         i = 0
         # read a property in each loop cycle
-        while(i < len(lines)):
+        while (i < len(lines)):
             # skip blank lines
             if re.match('\A\s*\Z', lines[i]):
                 test['__emit__'].append(("raw", raw_lines[i]))
@@ -61,7 +62,7 @@ class TestParser(object):
             if m:
                 msg = []
                 i += 1
-                while(not re.match('\A\s*"""\s*\Z', lines[i])):
+                while (not re.match('\A\s*"""\s*\Z', lines[i])):
                     msg.append(raw_lines[i])
                     i += 1
                 test[m.group(1)] = '\n'.join(msg)
