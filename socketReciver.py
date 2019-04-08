@@ -8,9 +8,10 @@ from util import Queue
 
 
 class socketServer(threading.Thread):
-    def __init__(self, serverID, port):
+    def __init__(self, serverID, bind_ip, port):
         super(socketServer, self).__init__()
         self.serverID = serverID
+        self.ip = bind_ip
         self.port = port
         self.connection_pool = []
         self.message_queue = Queue()
@@ -22,9 +23,9 @@ class socketServer(threading.Thread):
         self.message_queue_thread.start()
         self.conn_recycle_thread.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('0.0.0.0', self.port))
+        server.bind((self.ip, self.port))
         server.listen(5)
-        logger.info("Server listening on 0.0.0.0, port " + str(self.port))
+        logger.info("Server listening on " + self.ip + ", port " + str(self.port))
         while True:
             connection, addr = server.accept()
             logger.info("connection detected")
@@ -64,5 +65,5 @@ class messageQueueThread(threading.Thread):
 
 
 if __name__ == '__main__':
-    server = socketServer(0, 8080)
+    server = socketServer(0, "0.0.0.0", 8080)
     server.start()
