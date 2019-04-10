@@ -1,26 +1,33 @@
 import threading
 import socket
 import time
+import json
 
 import logger
 from connectionThread import connectionThread
 from util import Queue
 
+RECEIVE_BUFFER = 0
+SEND_BUFFER = 1
 
-class socketServer(threading.Thread):
+
+class socketReciver(threading.Thread):
     def __init__(self, serverID, bind_ip, port):
-        super(socketServer, self).__init__()
+        super(socketReciver, self).__init__()
         self.serverID = serverID
         self.ip = bind_ip
         self.port = port
         self.connection_pool = []
-        self.message_queue = Queue()
-        self.message_queue_thread = messageQueueThread(self.message_queue)
+        self.recv_queue = Queue()
+        self.recv_queue_thread = messageQueueThread(self.recv_queue, RECEIVE_BUFFER, self.connection_pool)
+        self.send_queue = Queue()
+        self.send_queue_thread = messageQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
 
     def run(self):
-        self.message_queue_thread.start()
+        self.recv_queue_thread.start()
+        self.send_queue_thread.start()
         self.conn_recycle_thread.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((self.ip, self.port))
@@ -28,8 +35,9 @@ class socketServer(threading.Thread):
         logger.info("Server listening on " + self.ip + ", port " + str(self.port))
         while True:
             connection, addr = server.accept()
-            logger.info("connection detected")
-            connection_thread = connectionThread(self.conn_id, connection, self.message_queue)
+            client_ip, client_port = addr
+            logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
+            connection_thread = connectionThread(self.conn_id, connection, self.recv_queue, self.send_queue)
             connection_thread.start()
             self.conn_id += 1
             self.connection_pool.append(connection_thread)
@@ -44,16 +52,18 @@ class connectionRecycleThread(threading.Thread):
         while True:
             for thread in self.pool:
                 if not thread.isAlive():
+                    logger.info("Recycled thread for connection.")
                     thread.join()
                     self.pool.remove(thread)
-            logger.info(len(self.pool))
             time.sleep(1)
 
 
 class messageQueueThread(threading.Thread):
-    def __init__(self, queue):
+    def __init__(self, queue, buf_type, pool):
         super(messageQueueThread, self).__init__()
         self.queue = queue
+        self.type = buf_type
+        self.pool = pool
 
     def run(self):
         while True:
@@ -61,9 +71,16 @@ class messageQueueThread(threading.Thread):
                 continue
             else:
                 msg = self.queue.pop()
-                logger.info(msg)
+                if self.type == SEND_BUFFER:
+                    target_addr = (msg['ip'], msg['port'])
+                    target_conn = list(filter(lambda x: (x.client_ip, x.client_port).__eq__(target_addr), self.pool))
+                    if len(target_conn) == 1:
+                        target_conn[0].send(json.dumps(msg))
+                    logger.info("Send message: {msg}".format(msg=msg))
+                elif self.type == RECEIVE_BUFFER:
+                    logger.info("Receive message: {msg}".format(msg=msg))
 
 
 if __name__ == '__main__':
-    server = socketServer(0, "0.0.0.0", 8080)
+    server = socketReciver(0, "0.0.0.0", 8080)
     server.start()
