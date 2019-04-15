@@ -60,6 +60,8 @@ from game import Agent
 from game import reconstituteGrid
 import sys, util, types, time, random, imp
 import keyboardAgents
+import socketAgents
+
 
 # If you change these, you won't affect the server, so you can't cheat
 KILL_POINTS = 0
@@ -782,6 +784,12 @@ def readCommand( argv ):
     parser.add_option('--keys1', help='Make agent 1 (second red player) a keyboard agent', action='store_true',default=False)
     parser.add_option('--keys2', help='Make agent 2 (first blue player) a keyboard agent', action='store_true',default=False)
     parser.add_option('--keys3', help='Make agent 3 (second blue player) a keyboard agent', action='store_true',default=False)
+
+    parser.add_option('--soc0', help='Make agent 0 (first red player) a socket agent', action='store_true',default=False)
+    parser.add_option('--soc1', help='Make agent 1 (second red player) a socket agent', action='store_true',default=False)
+    parser.add_option('--soc2', help='Make agent 2 (first blue player) a socket agent', action='store_true',default=False)
+    parser.add_option('--soc3', help='Make agent 3 (second blue player) a socket agent', action='store_true',default=False)
+
     parser.add_option('-l', '--layout', dest='layout',
                       help=default('the LAYOUT_FILE from which to load the map layout; use RANDOM for a random maze; use RANDOM<seed> to use a specified random seed, e.g., RANDOM23'),
                       metavar='LAYOUT_FILE', default='defaultCapture')
@@ -874,6 +882,19 @@ def readCommand( argv ):
         else:
             raise Exception('Max of two keyboard agents supported')
         numKeyboardAgents += 1
+        args['agents'][index] = agent
+
+    numSocketAgents = 0
+    for index, val in enumerate([options.soc0, options.soc1, options.soc2, options.soc3]):
+        if not val:
+            continue
+        if numSocketAgents == 0:
+            agent = socketAgents.SocketAgent(index)
+        elif numSocketAgents == 1:
+            agent = socketAgents.SocketAgent2(index)
+        else:
+            raise Exception('Max of two socket agents supported')
+        numSocketAgents += 1
         args['agents'][index] = agent
 
     # Choose a layout
