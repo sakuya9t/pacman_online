@@ -21,7 +21,8 @@ class connectionThread(threading.Thread):
                     break
                 self.recv_queue.push({"ip": self.client_ip, "port": self.client_port, "message": message})
                 self.send_queue.push({"ip": self.client_ip, "port": self.client_port, "message": "I received your message."})
-            except Exception:
+            except Exception as e:
+                logger.error(str(e))
                 break
         self.complete_callback()
         self.connection.close()

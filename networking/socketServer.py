@@ -9,11 +9,12 @@ from util import Queue
 
 RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
+CONTROL_BUFFER = 2
 
 
-class socketReciver(threading.Thread):
+class socketServer(threading.Thread):
     def __init__(self, serverID, bind_ip, port):
-        super(socketReciver, self).__init__()
+        super(socketServer, self).__init__()
         self.serverID = serverID
         self.ip = bind_ip
         self.port = port
@@ -22,6 +23,8 @@ class socketReciver(threading.Thread):
         self.recv_queue_thread = messageQueueThread(self.recv_queue, RECEIVE_BUFFER, self.connection_pool)
         self.send_queue = Queue()
         self.send_queue_thread = messageQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
+        self.input_queue = Queue()
+        self.input_queue_thread = messageQueueThread(self.input_queue, CONTROL_BUFFER, None)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
 
@@ -29,10 +32,11 @@ class socketReciver(threading.Thread):
         self.recv_queue_thread.start()
         self.send_queue_thread.start()
         self.conn_recycle_thread.start()
+        self.input_queue_thread.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((self.ip, self.port))
         server.listen(5)
-        logger.info("Server listening on " + self.ip + ", port " + str(self.port))
+        logger.info("Server listening on {ip}:{port}".format(ip=self.ip, port=self.port))
         while True:
             connection, addr = server.accept()
             client_ip, client_port = addr
@@ -79,8 +83,18 @@ class messageQueueThread(threading.Thread):
                     logger.info("Send message: {msg}".format(msg=msg))
                 elif self.type == RECEIVE_BUFFER:
                     logger.info("Receive message: {msg}".format(msg=msg))
+                elif self.type == CONTROL_BUFFER:
+                    logger.info("Keyboard input: {msg}".format(msg=msg))
+
+
+def generateServerID(port_num):
+    timestamp = str(int(time.time()))
+    return "{port},{timestamp}".format(port=port_num, timestamp=timestamp)
 
 
 if __name__ == '__main__':
-    server = socketReciver(0, "0.0.0.0", 8080)
+    from networking.inputHandler import inputHandler
+    server = socketServer(0, "0.0.0.0", 8080)
+    input_handler = inputHandler(server)
     server.start()
+    input_handler.start()

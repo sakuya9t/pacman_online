@@ -52,6 +52,8 @@ from game import GameStateData
 from game import Game
 from game import Directions
 from game import Actions
+from networking.inputHandler import inputHandler
+from networking.socketServer import socketServer, generateServerID
 from util import nearestPoint
 from util import manhattanDistance
 from game import Grid
@@ -810,10 +812,17 @@ def readCommand( argv ):
                       help=default('How many episodes are training (suppresses output)'), default=0)
     parser.add_option('-c', '--catchExceptions', action='store_true', default=False,
                       help='Catch exceptions and enforce time limits')
+    parser.add_option('--port', dest='port', type='int',
+                      help=default('Port number of game receiver'), default=8080)
 
     options, otherjunk = parser.parse_args(argv)
     assert len(otherjunk) == 0, "Unrecognized options: " + str(otherjunk)
     args = dict()
+
+    server = socketServer(serverID=generateServerID(options.port), bind_ip='0.0.0.0', port=options.port)
+    input_handler = inputHandler(server)
+    server.start()
+    input_handler.start()
 
     # Choose a display format
     #if options.pygame:
