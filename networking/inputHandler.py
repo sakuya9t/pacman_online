@@ -2,7 +2,6 @@ import threading
 import keyboard
 import time
 
-import logger
 
 KEY_PRESS_EVENT_MODE = 0
 INPUT_MODE = 1

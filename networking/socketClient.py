@@ -1,6 +1,7 @@
 import socket
 import time
-import logger
+from logger import logger
+import json
 
 
 class socketClient:
@@ -15,7 +16,7 @@ class socketClient:
         conn.connect((self.server_ip, self.server_port))
         while True:
             try:
-                conn.sendall(b'Hello, world')
+                conn.sendall(json.dumps({"abc": "123"}))
                 data = conn.recv(1024)
                 logger.info(data)
                 time.sleep(5)
