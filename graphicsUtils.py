@@ -369,7 +369,7 @@ def move_to(object, x, y=None,
         try:
             x, y = x
         except:
-            raise 'incomprehensible coordinates'
+            raise Exception('incomprehensible coordinates')
 
     horiz = True
     newCoords = []
