@@ -1,5 +1,6 @@
 import threading
 import json
+import time
 
 from util import Queue
 
@@ -17,13 +18,21 @@ class messageHandler(threading.Thread):
 
     def run(self):
         while True:
+            time.sleep(0.1)
             if self.recv_buf.isEmpty():
                 continue
             msg = self.recv_buf.pop()
             try:
                 source_ip, source_port = msg['ip'], msg['port']
-                msg = msg['message']
-                msg = json.loads(msg)
-                self.logger.info(msg)
+                msg = json.loads(msg['message'])
+                agent = msg['agent']
+                if agent == 'R1':
+                    self.r1_queue.push(msg['direction'])
+                if agent == 'B1':
+                    self.b1_queue.push(msg['direction'])
+                if agent == 'R2':
+                    self.r2_queue.push(msg['direction'])
+                if agent == 'B2':
+                    self.b2_queue.push(msg['direction'])
             except Exception as e:
                 self.logger.error(str(e))

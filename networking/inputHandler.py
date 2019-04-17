@@ -17,7 +17,7 @@ class inputHandler(threading.Thread):
 
     def run(self):
         while True:
-            time.sleep(5)
+            time.sleep(500)
 
     def key_press(self, key):
         try:

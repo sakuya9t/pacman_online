@@ -1,3 +1,4 @@
+import random
 import socket
 import time
 from logger import logger
@@ -16,10 +17,11 @@ class socketClient:
         conn.connect((self.server_ip, self.server_port))
         while True:
             try:
-                conn.sendall(json.dumps({"abc": "123"}))
+                dir = random.choice(['up', 'down', 'left', 'right'])
+                logger.info(json.dumps({"agent": "B1", "direction": dir}))
+                conn.sendall(json.dumps({"agent": "B1", "direction": dir}))
                 data = conn.recv(1024)
-                logger.info(data)
-                time.sleep(5)
+                time.sleep(1)
             except Exception as e:
                 print(e)
                 break

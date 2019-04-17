@@ -55,6 +55,7 @@ class connectionRecycleThread(threading.Thread):
 
     def run(self):
         while True:
+            time.sleep(0.05)
             for thread in self.pool:
                 if not thread.isAlive():
                     logger.info("Recycled thread for connection.")
@@ -72,6 +73,7 @@ class messageQueueThread(threading.Thread):
 
     def run(self):
         while True:
+            time.sleep(0.05)
             if self.type == SEND_BUFFER:
                 if self.queue.isEmpty():
                     continue
