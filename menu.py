@@ -2,6 +2,7 @@ from graphicsUtils import *
 
 # Keeps track of the current screen displayed
 currentScreen = None
+exit = False
 
 # Simple Button
 class Button:
@@ -15,36 +16,51 @@ class Button:
         self.color = color
         self.navigate = navigate
 
+    # Renders the button and text on screen
     def draw(self):
-        # Renders the button and text on screen
         rectangle((self.x, self.y), self.h, self.w, self.color, filled=1, behind=0)
         text((self.x, self.y), 'white', self.text, 'Helvetica', 12, 'normal', None)
 
+    # Returns True if a click is registered within the button area
     def contains(self, x, y):
-        # Returns True if a click is registered within the button area
         if (x < (self.x - self.w)) or (x > (self.x + self.w)) or (y < (self.y - self.h)) or y > (self.y + self.h):
             return False
         return True
 
+    # Updates current screen based on button functionality
     def click(self):
-        # Updates current screen based on button functionality
         global currentScreen
+        global exit
         if self.navigate == 'About':
             currentScreen = AboutScreen()
         elif self.navigate == 'Menu':
             currentScreen = MenuScreen()
         elif self.navigate == 'Room':
             currentScreen = RoomScreen()
+        elif self.navigate == 'Quit':
+            exit = True
         print(self.text)
 
+# A Screen
+class Screen:
+
+    def __init__(self):
+        super().__init__()
+
+    def draw(self):
+        pass
+
+    def listen(self, pos, type):
+        pass
+
 # Main Menu
-class MenuScreen:
+class MenuScreen(Screen):
 
     def __init__(self):
         self.name = 'Menu'
-        # Create buttons
         self.startButton = Button(320, 300, 'Start', 'green', 'Room')
         self.aboutButton = Button(320, 400, 'About', 'blue', 'About')
+        self.quitButton = Button(576, 448, 'Quit', 'red', 'Quit')
 
     def draw(self):
         clear_screen()
@@ -60,19 +76,21 @@ class MenuScreen:
         # Draw buttons
         self.startButton.draw()
         self.aboutButton.draw()
+        self.quitButton.draw()
 
     def listen(self, pos, type):
         if self.startButton.contains(pos[0], pos[1]):
             self.startButton.click()
         if self.aboutButton.contains(pos[0], pos[1]):
             self.aboutButton.click()
+        if self.quitButton.contains(pos[0], pos[1]):
+            self.quitButton.click()
 
 # Join Game
-class RoomScreen:
+class RoomScreen(Screen):
 
     def __init__(self):
         self.name = 'Room'
-        # Create buttons
         self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
 
     def draw(self):
@@ -90,11 +108,10 @@ class RoomScreen:
             self.backButton.click()
 
 # About Description
-class AboutScreen:
+class AboutScreen(Screen):
 
     def __init__(self):
         self.name = 'About'
-        # Create buttons
         self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
 
     def draw(self):
@@ -122,11 +139,12 @@ if __name__ == '__main__':
     currentScreen = MenuScreen()
 
     # Listen for events
-    while (True):
+    while (not exit):
         currentScreen.draw()
         pos, type = wait_for_click()
         print(pos, type, currentScreen)
         currentScreen.listen(pos, type)
+    end_graphics()
 
 #square((320, 300), 32, 'red', filled=1, behind=0)
 # begin_graphics()
