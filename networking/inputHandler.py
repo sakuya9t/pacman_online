@@ -32,5 +32,8 @@ class inputHandler(threading.Thread):
         else:
             if key_name == 'space':
                 self.msgbuffer += " "
+            elif key_name == 'backspace':
+                if len(self.msgbuffer) > 0:
+                    self.msgbuffer = self.msgbuffer[:-1]
             elif len(key_name) == 1:
                 self.msgbuffer += key_name
