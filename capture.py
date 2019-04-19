@@ -50,19 +50,16 @@ The keys are
 """
 from game import GameStateData
 from game import Game
-from game import Directions
 from game import Actions
-from networking.inputHandler import inputHandler
+from gameController.gameRunner import gameRunner
 from networking.socketServer import socketServer, generateServerID
 from util import nearestPoint
 from util import manhattanDistance
 from game import Grid
 from game import Configuration
-from game import Agent
-from game import reconstituteGrid
-import sys, util, types, time, random, imp
+import sys, util, random, imp
 import keyboardAgents
-import socketAgents
+from gameController import socketAgents
 
 # If you change these, you won't affect the server, so you can't cheat
 KILL_POINTS = 0
@@ -1045,7 +1042,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
 
         g.record = None
         if record:
-            import time, cPickle, game
+            import cPickle, game
             # fname = ('recorded-game-%d' % (i + 1)) +  '-'.join([str(t) for t in time.localtime()[1:6]])
             # f = file(fname, 'w')
             components = {'layout': layout, 'agents': [game.Agent() for a in agents], 'actions': g.moveHistory,
@@ -1087,11 +1084,9 @@ if __name__ == '__main__':
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
     server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
-    input_handler = inputHandler(server)
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
-    input_handler.start()
     del options['port']
 
     socketAgentIds = options['socket_agent']
@@ -1101,8 +1096,7 @@ if __name__ == '__main__':
         options['agents'][index] = agent
     del options['socket_agent']
 
-    games = runGames(**options)
-
-    save_score(games[0])
+    game_runner = gameRunner(server=server, options=options)
+    game_runner.start()
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')

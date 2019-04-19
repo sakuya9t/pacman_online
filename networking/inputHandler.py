@@ -17,7 +17,7 @@ class inputHandler(threading.Thread):
 
     def run(self):
         while True:
-            time.sleep(5)
+            time.sleep(500)
 
     def key_press(self, key):
         try:
@@ -32,5 +32,8 @@ class inputHandler(threading.Thread):
         else:
             if key_name == 'space':
                 self.msgbuffer += " "
+            elif key_name == 'backspace':
+                if len(self.msgbuffer) > 0:
+                    self.msgbuffer = self.msgbuffer[:-1]
             elif len(key_name) == 1:
                 self.msgbuffer += key_name

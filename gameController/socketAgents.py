@@ -1,3 +1,5 @@
+import time
+
 from game import Agent
 from game import Directions
 import random
@@ -33,7 +35,7 @@ class SocketAgent(Agent):
                 self.recvDirection = Directions.NORTH
             else:
                 self.recvDirection = Directions.STOP
-            print self.recvDirection
+            time.sleep(0.1)
 
     def getAction(self, state):
         legal = state.getLegalActions(self.index)
@@ -51,7 +53,7 @@ class SocketAgent(Agent):
                 move = self.lastMove
 
         if move not in legal:
-            move = random.choice(legal)
+            move = Directions.STOP
 
         self.lastMove = move
         return move
