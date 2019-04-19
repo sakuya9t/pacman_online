@@ -22,11 +22,13 @@ class socketServer(threading.Thread):
         self.port = port
         self.connection_pool = []
         self.send_queue = Queue()
-        self.send_queue_thread = messageQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
+        self.send_queue_thread = messageQueueThread(
+            self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
-        self.message_handler = messageHandler(recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
+        self.message_handler = messageHandler(
+            recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
-        self.input_handler = inputHandler(self)
+        # self.input_handler = inputHandler(self)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
         self.alive = True
@@ -35,8 +37,8 @@ class socketServer(threading.Thread):
     def run(self):
         self.message_handler.start()
         self.send_queue_thread.start()
+        # self.input_handler.start()
         self.conn_recycle_thread.start()
-        self.input_handler.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((self.ip, self.port))
         server.listen(5)
@@ -44,8 +46,10 @@ class socketServer(threading.Thread):
         while self.alive:
             connection, addr = server.accept()
             client_ip, client_port = addr
-            logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
-            connection_thread = connectionThread(self.conn_id, connection, self.recv_queue, self.send_queue, logger)
+            logger.info("Detected connection from {ip}:{port}.".format(
+                ip=client_ip, port=client_port))
+            connection_thread = connectionThread(
+                self.conn_id, connection, self.recv_queue, self.send_queue, logger)
             connection_thread.start()
             self.conn_id += 1
             self.connection_pool.append(connection_thread)
@@ -94,7 +98,8 @@ class messageQueueThread(threading.Thread):
                 continue
             msg = self.queue.pop()
             target_addr = (msg['ip'], msg['port'])
-            target_conn = list(filter(lambda x: (x.client_ip, x.client_port).__eq__(target_addr), self.pool))
+            target_conn = list(
+                filter(lambda x: (x.client_ip, x.client_port).__eq__(target_addr), self.pool))
             if len(target_conn) == 1:
                 target_conn[0].send(json.dumps(msg))
             logger.info("Send message: {msg}".format(msg=msg))

@@ -81,6 +81,7 @@ class messageHandler(threading.Thread):
                 self.r1_queue.push(key)
             else:
                 self.logger.error("messageHandler error: message not in queue")
+            self.logger.info("send agent:" + str(agent) + " id:" + str(id) + " key:" + str(key))
         if agent == 'B1':
             id, key = self.b1_hold_q.pop()
             while id != msg_count:
@@ -89,6 +90,7 @@ class messageHandler(threading.Thread):
                 self.b1_queue.push(key)
             else:
                 self.logger.error("messageHandler error: message not in queue")
+            self.logger.info("send agent:" + str(agent) + " id:" + str(id) + " key:" + str(key))
         if agent == 'R2':
             id, key = self.r2_hold_q.pop()
             while id != msg_count:
@@ -97,6 +99,7 @@ class messageHandler(threading.Thread):
                 self.r2_queue.push(key)
             else:
                 self.logger.error("messageHandler error: message not in queue")
+            self.logger.info("send agent:" + str(agent) + " id:" + str(id) + " key:" + str(key))
         if agent == 'B2':
             id, key = self.b2_hold_q.pop()
             while id != msg_count:
@@ -105,3 +108,4 @@ class messageHandler(threading.Thread):
                 self.b2_queue.push(key)
             else:
                 self.logger.error("messageHandler error: message not in queue")
+            self.logger.info("send agent:" + str(agent) + " id:" + str(id) + " key:" + str(key))
