@@ -70,6 +70,7 @@ from graphicsUtils import *
 # Keeps track of the current screen displayed
 currentScreen = None
 exit = False
+result = ''
 
 # Simple Button
 class Button:
@@ -98,7 +99,7 @@ class Button:
     def click(self):
         global currentScreen
         global exit
-        print(self.text)
+        # print(self.text)
         if self.navigate == 'About':
             currentScreen = AboutScreen()
         elif self.navigate == 'Menu':
@@ -107,6 +108,7 @@ class Button:
             options = readCommand( sys.argv[1:] ) # Get game components based on input
             games = runGames(**options)
             save_score(games[0])
+            currentScreen = ResultScreen()
         elif self.navigate == 'Room':
             currentScreen = RoomScreen()
         elif self.navigate == 'Quit':
@@ -158,6 +160,30 @@ class MenuScreen(Screen):
             self.quitButton.click()
 
 # Join Game
+class ResultScreen(Screen):
+
+    def __init__(self):
+        self.name = 'Result'
+        self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
+        begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
+
+    def draw(self):
+        global result
+        clear_screen()
+
+        # Draw menu title
+        rectangle((320, 100), 32, 256, 'red', 1, 0)
+        text((320, 90), 'white', 'Results', 'Helvetica', 12, 'normal', None)
+        text((320, 110), 'white', result, 'Helvetica', 12, 'normal', None)
+
+        # Draw buttons
+        self.backButton.draw()
+
+    def listen(self, pos, type):
+        if self.backButton.contains(pos[0], pos[1]):
+            self.backButton.click()
+
+# Join Game
 class RoomScreen(Screen):
 
     def __init__(self):
@@ -170,7 +196,8 @@ class RoomScreen(Screen):
 
         # Draw menu title
         rectangle((320, 100), 32, 256, 'red', 1, 0)
-        text((320, 100), 'white', 'Looking for a game', 'Helvetica', 12, 'normal', None)
+        text((320, 90), 'white', '*To be implemented* Looking for a game', 'Helvetica', 12, 'normal', None)
+        text((320, 110), 'white', 'Click "Play" for default game', 'Helvetica', 12, 'normal', None)
 
         # Draw buttons
         self.playButton.draw()
@@ -218,7 +245,7 @@ def main():
     while (not exit):
         currentScreen.draw()
         pos, type = wait_for_click()
-        print(pos, type, currentScreen)
+        # print(pos, type, currentScreen)
         currentScreen.listen(pos, type)
     end_graphics()
 
@@ -552,6 +579,7 @@ class CaptureRules:
         state.data._win = True
 
     if state.isOver():
+      global result # For UI access purposes
       game.gameOver = True
       if not game.rules.quiet:
         redCount = 0
@@ -565,16 +593,22 @@ class CaptureRules:
             blueCount += agentState.numReturned
 
         if blueCount >= foodToWin:#state.getRedFood().count() == MIN_FOOD:
-          print 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
+          result = 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
+          print result
         elif redCount >= foodToWin:#state.getBlueFood().count() == MIN_FOOD:
-          print 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
+          result = 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
+          print result
         else:#if state.getBlueFood().count() > MIN_FOOD and state.getRedFood().count() > MIN_FOOD:
           print 'Time is up.'
-          if state.data.score == 0: print 'Tie game!'
+          if state.data.score == 0:
+            result = 'Tie game!'
+            print result
           else:
             winner = 'Red'
-            if state.data.score < 0: winner = 'Blue'
-            print 'The %s team wins by %d points.' % (winner, abs(state.data.score))
+            if state.data.score < 0:
+              winner = 'Blue'
+            result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
+            print result
 
   def getProgress(self, game):
     blue = 1.0 - (game.state.getBlueFood().count() / float(self._initBlueFood))
@@ -1159,6 +1193,7 @@ def runGames( layouts, agents, display, length, numGames, record, numTraining, r
 
   if numGames > 1:
     scores = [game.state.data.score for game in games]
+    print('SCORES:'+ scores)
     redWinRate = [s > 0 for s in scores].count(True)/ float(len(scores))
     blueWinRate = [s < 0 for s in scores].count(True)/ float(len(scores))
     print 'Average Score:', sum(scores) / float(len(scores))
