@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -15,6 +15,33 @@
 from graphicsUtils import *
 import math, time
 from game import Directions
+
+###########################
+#  GRAPHICS DISPLAY CODE  #
+###########################
+
+# Simple Button
+class Button:
+
+    def __init__(self, x, y, text, color, navigate):
+        self.x = x
+        self.y = y
+        self.h = 32
+        self.w = 64
+        self.text = text
+        self.color = color
+        self.navigate = navigate
+
+    # Renders the button and text on screen
+    def draw(self):
+        rectangle((self.x, self.y), self.h, self.w, self.color, filled=1, behind=0)
+        text((self.x, self.y), 'white', self.text, 'Helvetica', 12, 'normal', None)
+
+    # Returns True if a click is registered within the button area
+    def contains(self, x, y):
+        if (x < (self.x - self.w)) or (x > (self.x + self.w)) or (y < (self.y - self.h)) or y > (self.y + self.h):
+            return False
+        return True
 
 ###########################
 #  GRAPHICS DISPLAY CODE  #
@@ -105,6 +132,10 @@ class InfoPane:
         return x,y
 
     def drawPane(self):
+        ## Attempt to add ui elements
+        endButtonX, endButtonY = self.toScreen((400, 0))
+        self.endButton = Button(endButtonX, endButtonY, 'End', 'red', 'End')
+        self.endButton.draw()
         self.scoreText = text( self.toScreen(0, 0  ), self.textColor, self._infoString(0,1200), "Consolas", self.fontSize, "bold")
         self.redText = text( self.toScreen(230, 0  ), TEAM_COLORS[0], self._redScoreString(), "Consolas", self.fontSize, "bold")
         self.redText = text( self.toScreen(690, 0  ), TEAM_COLORS[1], self._blueScoreString(), "Consolas", self.fontSize, "bold")
@@ -139,6 +170,11 @@ class InfoPane:
 
     def updateScore(self, score, timeleft):
         changeText(self.scoreText, self._infoString(score,timeleft))
+
+        # NEEDS SEPARATE THREAD
+        # Attempt to invoke button click
+        # pos, type = wait_for_click()
+        # print(pos, type)
 
     def setTeam(self, isBlue):
         text = "RED TEAM"
