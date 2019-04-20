@@ -851,6 +851,8 @@ def readCommand(argv):
                       help='Catch exceptions and enforce time limits')
     parser.add_option('--port', dest='port', type='int',
                       help=default('Port number of game receiver'), default=8080)
+    parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
+                      help='Disable the keyboard so that we can test only one input.', default=False)
 
     options, otherjunk = parser.parse_args(argv)
     assert len(otherjunk) == 0, "Unrecognized options: " + str(otherjunk)
@@ -948,6 +950,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
 

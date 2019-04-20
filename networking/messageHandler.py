@@ -4,6 +4,10 @@ import time
 
 from util import Queue
 
+MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
+MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
+MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
+
 
 class messageHandler(threading.Thread):
     def __init__(self, recv_buf, send_buf, logger):
@@ -25,14 +29,26 @@ class messageHandler(threading.Thread):
             try:
                 source_ip, source_port = msg['ip'], msg['port']
                 msg = json.loads(msg['message'])
-                agent = msg['agent']
-                if agent == 'R1':
-                    self.r1_queue.push(msg['direction'])
-                if agent == 'B1':
-                    self.b1_queue.push(msg['direction'])
-                if agent == 'R2':
-                    self.r2_queue.push(msg['direction'])
-                if agent == 'B2':
-                    self.b2_queue.push(msg['direction'])
+                msg_type = msg['type']
+                if msg_type == MESSAGE_TYPE_CONNECT_TO_SERVER:
+                    self.logger.info("Received connection request from {ip}:{port}: {message}."
+                                     .format(ip=source_ip, port=source_port, message=msg['msg']))
+                    continue
+                elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
+                    agent = msg['agent']
+                    if agent == 'R1':
+                        self.r1_queue.push(msg['direction'])
+                    if agent == 'B1':
+                        self.b1_queue.push(msg['direction'])
+                    if agent == 'R2':
+                        self.r2_queue.push(msg['direction'])
+                    if agent == 'B2':
+                        self.b2_queue.push(msg['direction'])
+                elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
+                    self.logger.info("Received normal message from {ip}:{port}: {message}."
+                                     .format(ip=source_ip, port=source_port, message=msg['msg']))
+                else:
+                    self.logger.info(msg)
             except Exception as e:
+                print(msg)
                 self.logger.error(str(e))
