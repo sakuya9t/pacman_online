@@ -20,6 +20,8 @@ from game import Directions
 #  GRAPHICS DISPLAY CODE  #
 ###########################
 
+end = False
+
 # Simple Button
 class Button:
 
@@ -42,6 +44,27 @@ class Button:
         if (x < (self.x - self.w)) or (x > (self.x + self.w)) or (y < (self.y - self.h)) or y > (self.y + self.h):
             return False
         return True
+
+    # Updates current screen based on button functionality
+    def click(self):
+        # global currentScreen
+        # global exit
+        print(self.text)
+        global end
+        end = True
+        # if self.navigate == 'About':
+        #     currentScreen = AboutScreen()
+        # elif self.navigate == 'Menu':
+        #     currentScreen = MenuScreen()
+        # elif self.navigate == 'Play':
+        #     options = readCommand( sys.argv[1:] ) # Get game components based on input
+        #     games = runGames(**options)
+        #     save_score(games[0])
+        #     currentScreen = ResultScreen()
+        # elif self.navigate == 'Room':
+        #     currentScreen = RoomScreen()
+        # elif self.navigate == 'Quit':
+        #     exit = True
 
 ###########################
 #  GRAPHICS DISPLAY CODE  #
@@ -132,10 +155,6 @@ class InfoPane:
         return x,y
 
     def drawPane(self):
-        ## Attempt to add ui elements
-        endButtonX, endButtonY = self.toScreen((400, 0))
-        self.endButton = Button(endButtonX, endButtonY, 'End', 'red', 'End')
-        self.endButton.draw()
         self.scoreText = text( self.toScreen(0, 0  ), self.textColor, self._infoString(0,1200), "Consolas", self.fontSize, "bold")
         self.redText = text( self.toScreen(230, 0  ), TEAM_COLORS[0], self._redScoreString(), "Consolas", self.fontSize, "bold")
         self.redText = text( self.toScreen(690, 0  ), TEAM_COLORS[1], self._blueScoreString(), "Consolas", self.fontSize, "bold")
@@ -170,11 +189,6 @@ class InfoPane:
 
     def updateScore(self, score, timeleft):
         changeText(self.scoreText, self._infoString(score,timeleft))
-
-        # NEEDS SEPARATE THREAD
-        # Attempt to invoke button click
-        # pos, type = wait_for_click()
-        # print(pos, type)
 
     def setTeam(self, isBlue):
         text = "RED TEAM"
@@ -231,6 +245,10 @@ class PacmanGraphics:
 
         # Information
         self.previousState = state
+
+        ## Add buttons to ui
+        self.endButton = Button(400, 32, 'End', 'red', 'End')
+        self.endButton.draw()
 
     def startGraphics(self, state):
         self.layout = state.layout
@@ -312,6 +330,21 @@ class PacmanGraphics:
         self.infoPane.updateScore(newState.score, newState.timeleft)
         if 'ghostDistances' in dir(newState):
             self.infoPane.updateGhostDistances(newState.ghostDistances)
+
+        # Attempt to invoke button click
+        click = wait_for_click_async()
+        if (click != None):
+            pos, type = click
+            if self.endButton.contains(pos[0], pos[1]):
+                self.endButton.click()
+
+        if newState.timeleft == 0:
+            destroy_listener_thread()
+
+        # Does not work yet
+        # global end
+        # if end == True:
+        #     self.finish()
 
     def make_window(self, width, height):
         grid_width = (width-1) * self.gridSize
@@ -472,6 +505,7 @@ class PacmanGraphics:
 
     def finish(self):
         end_graphics()
+        destroy_listener_thread()
 
     def to_screen(self, point):
         ( x, y ) = point

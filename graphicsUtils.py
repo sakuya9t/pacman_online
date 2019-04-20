@@ -138,6 +138,59 @@ def wait_for_click():
             return val, 'ctrl_left'
         sleep(0.05)
 
+import threading
+listener_thread = None
+click = None
+
+def wait_for_click_async():
+    # Start a thread to listen for click events
+    global listener_thread
+    global click
+    if listener_thread == None:
+        listener_thread = ClickThread(1, "click")
+        listener_thread.start()
+    temp = click
+    # Reset click event
+    click = None
+    return temp
+
+def destroy_listener_thread():
+    global listener_thread
+    if listener_thread != None:
+        listener_thread.stop()
+        listener_thread.join()
+
+class ClickThread (threading.Thread):
+    def __init__(self, id, name):
+        threading.Thread.__init__(self)
+        self._stop_event = threading.Event()
+        self.id = id
+        self.name = name
+
+    def run(self):
+        while not self.stopped():
+            global click
+            global _leftclick_loc
+            global _rightclick_loc
+            global _ctrl_leftclick_loc
+            if _leftclick_loc != None:
+                val = _leftclick_loc
+                _leftclick_loc = None
+                click = (val, 'left')
+            if _rightclick_loc != None:
+                val = _rightclick_loc
+                _rightclick_loc = None
+                click = (val, 'right')
+            if _ctrl_leftclick_loc != None:
+                val = _ctrl_leftclick_loc
+                _ctrl_leftclick_loc = None
+                click = (val, 'ctrl_left')
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
 
 def draw_background():
     corners = [(0, 0), (0, _canvas_ys), (_canvas_xs, _canvas_ys), (_canvas_xs, 0)]
