@@ -36,6 +36,10 @@ class messageHandler(threading.Thread):
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     # connect to source_ip:source_port
                     msg = msg['msg']
+                    self.server.node_map.append({'client': {'ip': source_ip, 'port': source_port},
+                                                 'server': {'ip': msg['ip'], 'port': msg['port']},
+                                                 'agent': msg['agent_id']})
+                    self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
                     self.server.activeConnect(msg['ip'], msg['port'])
                     continue
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:

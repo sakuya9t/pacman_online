@@ -21,6 +21,7 @@ class socketServer(threading.Thread):
         self.ip = bind_ip
         self.port = port
         self.connection_pool = []
+        self.node_map = []
         self.send_queue = Queue()
         self.send_queue_thread = messageSendingQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
@@ -49,7 +50,7 @@ class socketServer(threading.Thread):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn.connect((ip, port))
         logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
-        connection_thread = connectionThread(self.conn_id, conn, self.recv_queue, self.send_queue, logger)
+        connection_thread = connectionThread(self.conn_id, conn, self, logger)
         connection_thread.start()
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
@@ -57,7 +58,7 @@ class socketServer(threading.Thread):
     def passiveConnect(self, connection, addr):
         client_ip, client_port = addr
         logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
-        connection_thread = connectionThread(self.conn_id, connection, self.recv_queue, self.send_queue, logger)
+        connection_thread = connectionThread(self.conn_id, connection, self, logger)
         connection_thread.start()
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
