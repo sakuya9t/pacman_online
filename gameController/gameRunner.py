@@ -12,6 +12,7 @@ class gameRunner(threading.Thread):
         super(gameRunner, self).__init__()
         self.server = server
         self.alive = True
+        self.started = False
         self.options = options
         self.control_queue = server.input_queue
         self.logger = server.logger
@@ -32,12 +33,16 @@ class gameRunner(threading.Thread):
             self.logger.info("Keyboard input: {msg}".format(msg=msg))
             if 'msg' in msg.keys():
                 self.handleMessage(msg['msg'])
+            elif 'key' in msg.keys():
+                # key control event
+                self.handleArrowControl(msg['key'])
 
     def handleMessage(self, msg):
         try:
             if msg == 'gamestart':
                 # >gamestart
                 thread.start_new_thread(self.runGame, ())
+                self.started = True
                 # >connect 127.0.0.1 8080
             elif 'connect' in msg:
                 if self.role == '':
@@ -57,6 +62,15 @@ class gameRunner(threading.Thread):
                 self.server.sendMsg((args[1], args[2]), MESSAGE_TYPE_NORMAL_MESSAGE, args[3])
         except Exception as e:
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
+
+    def handleArrowControl(self, key):
+        # todo: test this function
+        try:
+            message = {"agent": self.role, "direction": key,
+                       "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
+        except Exception as e:
+            self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
 
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
@@ -78,4 +92,5 @@ class gameRunner(threading.Thread):
     def runGame(self):
         from capture import runGames, save_score
         games = runGames(**self.options)
+        self.started = False
         save_score(games[0])

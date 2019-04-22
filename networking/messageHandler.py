@@ -41,9 +41,11 @@ class messageHandler(threading.Thread):
                                                  'agent': msg['agent_id']})
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
                     self.server.activeConnect(msg['ip'], msg['port'])
+                    # todo: after active connect, send message so that opposite can store my server/client info.
                     continue
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
-                    agent = msg['agent']
+                    print(msg)
+                    agent = msg['agent'].upper()
                     if agent == 'R1':
                         self.r1_queue.push(msg['direction'])
                     if agent == 'B1':

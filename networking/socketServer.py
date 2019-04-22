@@ -68,6 +68,13 @@ class socketServer(threading.Thread):
         msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
         self.send_queue.push(msg_packet)
 
+    def sendToAllOtherPlayers(self, msg_type, msg):
+        logger.info("Send message to all other players: {msg}".format(msg=msg))
+        for node in self.node_map:
+            server_info = node['server']
+            server_ip, server_port = server_info['ip'], server_info['port']
+            self.sendMsg((server_ip, server_info), msg_type, msg)
+
     def join(self, timeout=None):
         self.alive = False
         self.message_handler.join()
