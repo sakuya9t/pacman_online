@@ -8,3 +8,10 @@
 | Nai Wang      | 927209      | naiw1@student.unimelb.edu.au    |
 | Leewei Kuo    | 932975      | leeweik1@student.unimelb.edu.au |
 | Ivan Chee     | 736901      | ichee@student.unimelb.edu.au    |
+
+
+## Installation
+pip install keyboard
+
+## Execution
+python capture.py
