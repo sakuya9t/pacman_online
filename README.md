@@ -15,3 +15,17 @@ pip install keyboard
 
 ## Execution
 python capture.py
+
+
+## Bug in Python 2.7
+Python 2.7 may encounter an error similar to below:
+File "C:\Python27\lib\site-packages\keyboard\_winkeyboard.py", line 37, in <module>
+  kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+File "C:\Python27\lib\site-packages\keyboard\_winkeyboard.py", line 44, in <module>
+  user32 = ctypes.WinDLL('user32', use_last_error=True)
+TypeError: LoadLibrary() argument 1 must be string, not unicode
+
+Open the file with kernel32
+Change 'kernel32' to b'kernel32'
+And 'user32' to b'user32
+>> nano /c/Anaconda2/lib/site-packages/keyboard/_winkeyboard.py

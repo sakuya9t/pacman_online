@@ -66,187 +66,7 @@ from gameController import socketAgents
 ###################################################
 
 from graphicsUtils import *
-
-# Keeps track of the current screen displayed
-global currentScreen
-exit = False
-result = ''
-
-# Simple Button
-class Button:
-
-    def __init__(self, x, y, text, color, navigate):
-        self.x = x
-        self.y = y
-        self.h = 32
-        self.w = 64
-        self.text = text
-        self.color = color
-        self.navigate = navigate
-
-    # Renders the button and text on screen
-    def draw(self):
-        rectangle((self.x, self.y), self.h, self.w, self.color, filled=1, behind=0)
-        text((self.x, self.y), 'white', self.text, 'Helvetica', 12, 'normal', None)
-
-    # Returns True if a click is registered within the button area
-    def contains(self, x, y):
-        if (x < (self.x - self.w)) or (x > (self.x + self.w)) or (y < (self.y - self.h)) or y > (self.y + self.h):
-            return False
-        return True
-
-    # Updates current screen based on button functionality
-    def click(self):
-        global currentScreen
-        global exit
-        # print(self.text)
-        if self.navigate == 'About':
-            currentScreen = AboutScreen()
-        elif self.navigate == 'Menu':
-            currentScreen = MenuScreen()
-        elif self.navigate == 'Play':
-            options = readCommand(sys.argv[1:])  # Get game components based on input
-
-            server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
-            socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
-                                           server.message_handler.r2_queue, server.message_handler.b2_queue]
-            server.start()
-            del options['port']
-
-            socketAgentIds = options['socket_agent']
-            for index in socketAgentIds:
-                agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                                 index=index)
-                options['agents'][index] = agent
-            del options['socket_agent']
-
-            game_runner = gameRunner(server=server, options=options)
-            game_runner.start()
-
-            #games = runGames(**options)
-            #save_score(games[0])
-            currentScreen = ResultScreen()
-        elif self.navigate == 'Room':
-            currentScreen = RoomScreen()
-        elif self.navigate == 'Quit':
-            exit = True
-
-# A Screen
-class Screen:
-
-    def __init__(self):
-        super().__init__()
-
-    def draw(self):
-        pass
-
-    def listen(self, pos, type):
-        pass
-
-# Main Menu
-class MenuScreen(Screen):
-
-    def __init__(self):
-        self.name = 'Menu'
-        self.startButton = Button(320, 300, 'Start', 'green', 'Room')
-        self.aboutButton = Button(320, 400, 'About', 'blue', 'About')
-        self.quitButton = Button(576, 448, 'Quit', 'red', 'Quit')
-
-    def draw(self):
-        clear_screen()
-
-        # Draw menu title
-        rectangle((320, 100), 32, 256, 'red', 1, 0)
-        text((320, 90), 'white', 'Distributed Pacman', 'Helvetica', 12, 'normal', None)
-        text((320, 110), 'white', 'Zijian Wang | Nai Wang | Leewei Kuo | Ivan Chee', 'Helvetica', 12, 'normal', None)
-
-        # Pacman logo
-        circle((320, 200), 32, 'red', 'yellow', None, 'pieslice', 2)
-
-        # Draw buttons
-        self.startButton.draw()
-        self.aboutButton.draw()
-        self.quitButton.draw()
-
-    def listen(self, pos, type):
-        if self.startButton.contains(pos[0], pos[1]):
-            self.startButton.click()
-        if self.aboutButton.contains(pos[0], pos[1]):
-            self.aboutButton.click()
-        if self.quitButton.contains(pos[0], pos[1]):
-            self.quitButton.click()
-
-# Join Game
-class ResultScreen(Screen):
-
-    def __init__(self):
-        self.name = 'Result'
-        self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
-        begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
-
-    def draw(self):
-        global result
-        clear_screen()
-
-        # Draw menu title
-        rectangle((320, 100), 32, 256, 'red', 1, 0)
-        text((320, 90), 'white', 'Results', 'Helvetica', 12, 'normal', None)
-        text((320, 110), 'white', result, 'Helvetica', 12, 'normal', None)
-
-        # Draw buttons
-        self.backButton.draw()
-
-    def listen(self, pos, type):
-        if self.backButton.contains(pos[0], pos[1]):
-            self.backButton.click()
-
-# Join Game
-class RoomScreen(Screen):
-
-    def __init__(self):
-        self.name = 'Room'
-        self.playButton = Button(320, 300, 'Play', 'green', 'Play')
-        self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
-
-    def draw(self):
-        clear_screen()
-
-        # Draw menu title
-        rectangle((320, 100), 32, 256, 'red', 1, 0)
-        text((320, 90), 'white', '*To be implemented* Looking for a game', 'Helvetica', 12, 'normal', None)
-        text((320, 110), 'white', 'Click "Play" for default game', 'Helvetica', 12, 'normal', None)
-
-        # Draw buttons
-        self.playButton.draw()
-        self.backButton.draw()
-
-    def listen(self, pos, type):
-        if self.playButton.contains(pos[0], pos[1]):
-            self.playButton.click()
-        if self.backButton.contains(pos[0], pos[1]):
-            self.backButton.click()
-
-# About Description
-class AboutScreen(Screen):
-
-    def __init__(self):
-        self.name = 'About'
-        self.backButton = Button(320, 400, 'Back', 'orange', 'Menu')
-
-    def draw(self):
-        clear_screen()
-
-        # Draw menu title
-        rectangle((320, 100), 32, 256, 'red', 1, 0)
-        text((320, 90), 'white', 'COMP90020 Distributed Algorithms', 'Helvetica', 12, 'normal', None)
-        text((320, 110), 'white', 'Project Semester 1 2019', 'Helvetica', 12, 'normal', None)
-
-        # Draw buttons
-        self.backButton.draw()
-
-    def listen(self, pos, type):
-        if self.backButton.contains(pos[0], pos[1]):
-            self.backButton.click()
+import globals
 
 ###################################################
 
@@ -1259,6 +1079,27 @@ def save_score(game):
         print >> f, game.state.data.score
 
 
+# Functions passed to ui
+def startServer(server, options):
+    socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
+                                   server.message_handler.r2_queue, server.message_handler.b2_queue]
+    server.start()
+    del options['port']
+
+    socketAgentIds = options['socket_agent']
+    for index in socketAgentIds:
+        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
+                                         index=index)
+        options['agents'][index] = agent
+    del options['socket_agent']
+
+def stopServer(server):
+    server.join()
+
+def startGame(server, options):
+    game_runner = gameRunner(server=server, options=options)
+    game_runner.start()
+
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
@@ -1271,21 +1112,30 @@ if __name__ == '__main__':
     > python capture.py --help
     """
 
+    # Initialise ui variables
+    globals.initialize()
+
+    # Get game components based on input
+    globals.options = readCommand(sys.argv[1:])
+    # Initialise server
+    globals.server = socketServer(serverID=generateServerID(globals.options['port']), bind_ip='0.0.0.0', port=globals.options['port'])
+
+    startServer(globals.server, globals.options)
+
     # Initialise graphics
     begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
 
-    # Set the menu screen as the point of entry
-    global currentScreen
-    currentScreen = MenuScreen()
-
     # Listen for events
-    while (not exit):
-        currentScreen.draw()
+    while (not globals.exit):
+        globals.screen.draw()
         pos, type = wait_for_click()
-        # print(pos, type, currentScreen)
-        currentScreen.listen(pos, type)
-    end_graphics()
+        globals.screen.listen(pos, type)
+        # Gonna put this somewhere later:
+        # startGame(globals.server, globals.options)
 
+    # Destroy graphics and stop server
+    end_graphics()
+    stopServer(globals.server)
 
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')
