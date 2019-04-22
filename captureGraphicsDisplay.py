@@ -21,6 +21,7 @@ from game import Directions
 ###########################
 
 end = False
+import globals
 
 # Simple Button
 class Button:
@@ -332,19 +333,19 @@ class PacmanGraphics:
             self.infoPane.updateGhostDistances(newState.ghostDistances)
 
         # Attempt to invoke button click
-        click = wait_for_click_async()
-        if (click != None):
-            pos, type = click
-            if self.endButton.contains(pos[0], pos[1]):
-                self.endButton.click()
+        # click = wait_for_click_async()
+        # if (click != None):
+        #     pos, type = click
+        #     if self.endButton.contains(pos[0], pos[1]):
+        #         self.endButton.click()
 
-        if newState.timeleft == 0:
-            destroy_listener_thread()
+        # if newState.timeleft == 0:
+        #     destroy_listener_thread()
 
-        # Does not work yet
-        # global end
-        # if end == True:
-        #     self.finish()
+        # ???
+        if globals.playing == False:
+            print('game ended')
+            self.finish()
 
     def make_window(self, width, height):
         grid_width = (width-1) * self.gridSize
@@ -505,7 +506,7 @@ class PacmanGraphics:
 
     def finish(self):
         end_graphics()
-        destroy_listener_thread()
+        # destroy_listener_thread()
 
     def to_screen(self, point):
         ( x, y ) = point

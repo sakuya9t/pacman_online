@@ -2,7 +2,6 @@ import thread
 import threading
 import time
 
-
 class gameRunner(threading.Thread):
     def __init__(self, server, options):
         super(gameRunner, self).__init__()
@@ -13,6 +12,9 @@ class gameRunner(threading.Thread):
         self.logger = server.logger
 
     def run(self):
+        # TEST: start game
+        self.runGame()
+
         while self.alive:
             time.sleep(0.01)
             if self.control_queue.isEmpty():
@@ -24,6 +26,7 @@ class gameRunner(threading.Thread):
 
     def handleMessage(self, msg):
         try:
+            # Attempt to bind this function to global ui
             if msg == 'gamestart':
                 thread.start_new_thread(self.runGame, ())
             elif 'connect' in msg:

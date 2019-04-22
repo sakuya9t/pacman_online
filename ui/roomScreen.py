@@ -30,7 +30,7 @@ class RoomScreen(Screen):
             self.backButton.click()
 
     def playButtonFunction(self):
-        globals.transition('Result')
+        globals.playing = True
 
     def backButtonFunction(self):
         globals.transition('Menu')

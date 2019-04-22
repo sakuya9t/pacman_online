@@ -1193,7 +1193,6 @@ def runGames( layouts, agents, display, length, numGames, record, numTraining, r
 
   if numGames > 1:
     scores = [game.state.data.score for game in games]
-    print('SCORES:'+ scores)
     redWinRate = [s > 0 for s in scores].count(True)/ float(len(scores))
     blueWinRate = [s < 0 for s in scores].count(True)/ float(len(scores))
     print 'Average Score:', sum(scores) / float(len(scores))

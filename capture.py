@@ -51,7 +51,7 @@ The keys are
 from game import GameStateData
 from game import Game
 from game import Actions
-from gameController.gameRunner import gameRunner
+#from gameController.gameRunner import gameRunner
 from networking.socketServer import socketServer, generateServerID
 from util import nearestPoint
 from util import manhattanDistance
@@ -423,17 +423,22 @@ class CaptureRules:
                         blueCount += agentState.numReturned
 
                 if blueCount >= foodToWin:  # state.getRedFood().count() == MIN_FOOD:
-                    print 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
+                    globals.result = 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
                 elif redCount >= foodToWin:  # state.getBlueFood().count() == MIN_FOOD:
-                    print 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
+                    globals.result = 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
                 else:  # if state.getBlueFood().count() > MIN_FOOD and state.getRedFood().count() > MIN_FOOD:
                     print 'Time is up.'
                     if state.data.score == 0:
-                        print 'Tie game!'
+                        globals.result = 'Tie game!'
                     else:
                         winner = 'Red'
                         if state.data.score < 0: winner = 'Blue'
-                        print 'The %s team wins by %d points.' % (winner, abs(state.data.score))
+                        globals.result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
+                print globals.result
+
+                # FOR TESTING ONLY
+                end_graphics()
+                globals.playing = False
 
     def getProgress(self, game):
         blue = 1.0 - (game.state.getBlueFood().count() / float(self._initBlueFood))
@@ -1096,10 +1101,6 @@ def startServer(server, options):
 def stopServer(server):
     server.join()
 
-def startGame(server, options):
-    game_runner = gameRunner(server=server, options=options)
-    game_runner.start()
-
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
@@ -1122,20 +1123,11 @@ if __name__ == '__main__':
 
     startServer(globals.server, globals.options)
 
-    # Initialise graphics
-    begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
-
-    # Listen for events
-    while (not globals.exit):
-        globals.screen.draw()
-        pos, type = wait_for_click()
-        globals.screen.listen(pos, type)
-        # Gonna put this somewhere later:
-        # startGame(globals.server, globals.options)
+    globals.run()
 
     # Destroy graphics and stop server
-    end_graphics()
     stopServer(globals.server)
+    globals.end()
 
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')
