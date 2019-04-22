@@ -10,8 +10,9 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 
 
 class messageHandler(threading.Thread):
-    def __init__(self, recv_buf, send_buf, logger):
+    def __init__(self, server, recv_buf, send_buf, logger):
         super(messageHandler, self).__init__()
+        self.server = server
         self.recv_buf = recv_buf
         self.send_buf = send_buf
         self.r1_queue = Queue()
@@ -33,6 +34,9 @@ class messageHandler(threading.Thread):
                 if msg_type == MESSAGE_TYPE_CONNECT_TO_SERVER:
                     self.logger.info("Received connection request from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
+                    # connect to source_ip:source_port
+                    msg = msg['msg']
+                    self.server.activeConnect(msg['ip'], msg['port'])
                     continue
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     agent = msg['agent']

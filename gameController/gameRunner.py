@@ -2,8 +2,6 @@ import thread
 import threading
 import time
 
-from networking.socketClient import socketClient
-
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'

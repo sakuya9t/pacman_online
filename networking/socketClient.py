@@ -53,6 +53,6 @@ class socketClient(threading.Thread):
 
 
 if __name__ == "__main__":
-    client = socketClient(None, None, '127.0.0.1', 8080, 'B1')
+    client = socketClient(None, None, '127.0.0.1', 8081, 'B1')
     client.start()
     client.sendMsg({'type': MESSAGE_TYPE_CONNECT_TO_SERVER, 'agent_id': 'B1', 'ip': "testip", 'port': "testport"})

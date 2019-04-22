@@ -24,7 +24,7 @@ class socketServer(threading.Thread):
         self.send_queue = Queue()
         self.send_queue_thread = messageSendingQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
-        self.message_handler = messageHandler(recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
+        self.message_handler = messageHandler(server=self, recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
         self.input_handler = inputHandler(self)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)

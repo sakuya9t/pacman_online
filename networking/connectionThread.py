@@ -33,4 +33,5 @@ class connectionThread(threading.Thread):
         self.connection.sendall(message)
 
     def complete_callback(self):
-        self.recv_queue.push("Client {ip}:{port} disconnected.".format(ip=self.client_ip, port=self.client_port))
+        self.logger.warning("Connection with {ip}:{port} terminated."
+                            .format(ip=self.client_ip, port=self.client_port))
