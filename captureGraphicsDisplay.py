@@ -49,24 +49,7 @@ class Button:
 
     # Updates current screen based on button functionality
     def click(self):
-        # global currentScreen
-        # global exit
         print(self.text)
-        global end
-        end = True
-        # if self.navigate == 'About':
-        #     currentScreen = AboutScreen()
-        # elif self.navigate == 'Menu':
-        #     currentScreen = MenuScreen()
-        # elif self.navigate == 'Play':
-        #     options = readCommand( sys.argv[1:] ) # Get game components based on input
-        #     games = runGames(**options)
-        #     save_score(games[0])
-        #     currentScreen = ResultScreen()
-        # elif self.navigate == 'Room':
-        #     currentScreen = RoomScreen()
-        # elif self.navigate == 'Quit':
-        #     exit = True
 
 ###########################
 #  GRAPHICS DISPLAY CODE  #
@@ -249,14 +232,15 @@ class PacmanGraphics(Screen):
         self.previousState = state
 
         ## Add buttons to ui
-        self.endButton = Button(400, 32, 'End', 'red', 'End')
+        self.endButton = Button(500, 32, 'End', 'red', 'End')
         self.endButton.draw()
 
-    # def draw(self, state):
-    #     self.update()
-    #
-    # def listen(self):
-    #     print('hi')
+    def draw(self, state):
+        print('hello')
+
+    def listen(self, pos, type):
+        if self.endButton.contains(pos[0], pos[1]):
+            self.endButton.click()
 
     def startGraphics(self, state):
         self.layout = state.layout
@@ -338,21 +322,6 @@ class PacmanGraphics(Screen):
         self.infoPane.updateScore(newState.score, newState.timeleft)
         if 'ghostDistances' in dir(newState):
             self.infoPane.updateGhostDistances(newState.ghostDistances)
-
-        # Attempt to invoke button click
-        # click = wait_for_click_async()
-        # if (click != None):
-        #     pos, type = click
-        #     if self.endButton.contains(pos[0], pos[1]):
-        #         self.endButton.click()
-
-        # if newState.timeleft == 0:
-        #     destroy_listener_thread()
-
-        # ???
-        if globals.playing == False:
-            print('game ended')
-            self.finish()
 
     def make_window(self, width, height):
         grid_width = (width-1) * self.gridSize
@@ -514,9 +483,7 @@ class PacmanGraphics(Screen):
 
     def finish(self):
         print('Game has ended')
-        #hide_graphics()
         # end_graphics()
-        # destroy_listener_thread()
 
     def to_screen(self, point):
         ( x, y ) = point

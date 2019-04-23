@@ -56,7 +56,7 @@ def run():
     global options
 
     # Initialise graphics
-    begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
+    begin_graphics(1000.0, 640.0, formatColor(0, 0, 0), "Distributed Pacman")
 
     # Listen for events
     while (not exit):
@@ -69,8 +69,12 @@ def run():
 
             game_runner = gameRunner(server=server, options=options)
             game_runner.start()
+
             while playing:
+                # pos, type = wait_for_click()
+                # screen.listen(pos, type)
                 continue
+
             game_runner.join()
 
             clear_screen()

@@ -51,7 +51,7 @@ The keys are
 from game import GameStateData
 from game import Game
 from game import Actions
-#from gameController.gameRunner import gameRunner
+# from gameController.gameRunner import gameRunner
 from networking.socketServer import socketServer, generateServerID
 from util import nearestPoint
 from util import manhattanDistance
@@ -61,14 +61,8 @@ import sys, util, random, imp
 import keyboardAgents
 from gameController import socketAgents
 
-###################################################
-# UI STUFF                                        #
-###################################################
-
 from graphicsUtils import *
 import globals
-
-###################################################
 
 # If you change these, you won't affect the server, so you can't cheat
 KILL_POINTS = 0
@@ -1082,24 +1076,6 @@ def save_score(game):
     with open('score', 'w') as f:
         print >> f, game.state.data.score
 
-
-# Functions passed to ui
-def startServer(server, options):
-    socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
-                                   server.message_handler.r2_queue, server.message_handler.b2_queue]
-    server.start()
-    del options['port']
-
-    socketAgentIds = options['socket_agent']
-    for index in socketAgentIds:
-        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                         index=index)
-        options['agents'][index] = agent
-    del options['socket_agent']
-
-def stopServer(server):
-    server.join()
-
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
@@ -1117,15 +1093,30 @@ if __name__ == '__main__':
 
     # Get game components based on input
     globals.options = readCommand(sys.argv[1:])
+
+    # TODO: MOVE INTO GLOBALS SO UI CAN CONTROL
     # Initialise server
     globals.server = socketServer(serverID=generateServerID(globals.options['port']), bind_ip='0.0.0.0', port=globals.options['port'])
+    socket_agent_control_buffer = [
+        globals.server.message_handler.r1_queue,
+        globals.server.message_handler.b1_queue,
+        globals.server.message_handler.r2_queue,
+        globals.server.message_handler.b2_queue
+    ]
+    globals.server.start()
+    del globals.options['port']
 
-    startServer(globals.server, globals.options)
+    socketAgentIds = globals.options['socket_agent']
+    for index in socketAgentIds:
+        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index], index=index)
+        globals.options['agents'][index] = agent
+    del globals.options['socket_agent']
 
+    # Run ui
     globals.run()
 
     # Stop server
-    stopServer(globals.server)
+    globals.server.join()
 
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')
