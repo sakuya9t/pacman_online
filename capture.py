@@ -851,6 +851,8 @@ def readCommand(argv):
                       help='Catch exceptions and enforce time limits')
     parser.add_option('--port', dest='port', type='int',
                       help=default('Port number of game receiver'), default=8080)
+    parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
+                      help='Disable the keyboard so that we can test only one input.', default=False)
 
     options, otherjunk = parser.parse_args(argv)
     assert len(otherjunk) == 0, "Unrecognized options: " + str(otherjunk)
@@ -906,8 +908,10 @@ def readCommand(argv):
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
     numKeyboardAgents = 0
+    agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
         if not val: continue
+        args['myrole'] = agents_enum[index]
         if numKeyboardAgents == 0:
             agent = keyboardAgents.KeyboardAgent(index)
         elif numKeyboardAgents == 1:
@@ -948,6 +952,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
 
@@ -1083,7 +1088,7 @@ if __name__ == '__main__':
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()

@@ -1,9 +1,8 @@
+import thread
 import time
 
 from game import Agent
 from game import Directions
-import random
-import thread
 
 
 class SocketAgent(Agent):
