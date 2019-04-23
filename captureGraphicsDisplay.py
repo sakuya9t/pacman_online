@@ -22,6 +22,7 @@ from game import Directions
 
 end = False
 import globals
+from ui.screen import Screen
 
 # Simple Button
 class Button:
@@ -222,7 +223,7 @@ class InfoPane:
         pass
 
 
-class PacmanGraphics:
+class PacmanGraphics(Screen):
     def __init__(self, redTeam, blueTeam, zoom=1.0, frameTime=0.0, capture=False):
         self.expandedCells = []
         self.have_window = 0
@@ -250,6 +251,12 @@ class PacmanGraphics:
         ## Add buttons to ui
         self.endButton = Button(400, 32, 'End', 'red', 'End')
         self.endButton.draw()
+
+    # def draw(self, state):
+    #     self.update()
+    #
+    # def listen(self):
+    #     print('hi')
 
     def startGraphics(self, state):
         self.layout = state.layout
@@ -353,10 +360,11 @@ class PacmanGraphics:
         screen_width = 2*self.gridSize + grid_width
         screen_height = 2*self.gridSize + grid_height + INFO_PANE_HEIGHT
 
-        begin_graphics(screen_width,
-                       screen_height,
-                       BACKGROUND_COLOR,
-                       "CS188 Pacman")
+        clear_screen()
+        # begin_graphics(screen_width,
+        #                screen_height,
+        #                BACKGROUND_COLOR,
+        #                "CS188 Pacman")
 
     def drawPacman(self, pacman, index):
         position = self.getPosition(pacman)
@@ -505,7 +513,9 @@ class PacmanGraphics:
         return agentState.configuration.getDirection()
 
     def finish(self):
-        end_graphics()
+        print('Game has ended')
+        #hide_graphics()
+        # end_graphics()
         # destroy_listener_thread()
 
     def to_screen(self, point):

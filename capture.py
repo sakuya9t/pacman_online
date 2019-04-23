@@ -436,8 +436,7 @@ class CaptureRules:
                         globals.result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
                 print globals.result
 
-                # FOR TESTING ONLY
-                end_graphics()
+                # Set the playing flag to false
                 globals.playing = False
 
     def getProgress(self, game):
@@ -1125,9 +1124,8 @@ if __name__ == '__main__':
 
     globals.run()
 
-    # Destroy graphics and stop server
+    # Stop server
     stopServer(globals.server)
-    globals.end()
 
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')

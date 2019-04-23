@@ -1,5 +1,6 @@
 from graphicsUtils import *
 from ui.aboutScreen import AboutScreen
+from captureGraphicsDisplay import PacmanGraphics
 from ui.menuScreen import MenuScreen
 from ui.resultScreen import ResultScreen
 from ui.roomScreen import RoomScreen
@@ -20,6 +21,7 @@ global server
 # Command line options
 global options
 
+# Whether a game is in progress
 global playing
 
 def transition(name):
@@ -31,7 +33,6 @@ def transition(name):
     elif name == 'Room':
         screen = RoomScreen()
     elif name == 'Result':
-        print('A game has ended')
         screen = ResultScreen()
 
 def initialize():
@@ -63,30 +64,20 @@ def run():
         pos, type = wait_for_click()
         screen.listen(pos, type)
         if playing:
-            end()
+            # Switch to pacman graphics
+            screen = options['display']
+
             game_runner = gameRunner(server=server, options=options)
             game_runner.start()
             while playing:
                 continue
             game_runner.join()
-            print('joined')
-            end_graphics()
-            print('end')
-            begin_graphics(480, 640, formatColor(0, 0, 0), "Hi Pacman")
-            #begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
-            screen = ResultScreen()
-            # globals.reinitialize()
-            # globals.transition('Result')
-        # if screen == None:
-        #     print('RESULT:',result)
-        #     begin_graphics(640, 480, formatColor(0, 0, 0), "Distributed Pacman")
+
+            clear_screen()
+            transition('Result')
+    end_graphics()
 
 def draw():
     global screen
     print(screen)
     screen.draw()
-
-def end():
-    global screen
-    screen = None
-    end_graphics()
