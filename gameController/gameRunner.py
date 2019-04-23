@@ -1,3 +1,4 @@
+import json
 import thread
 import threading
 import time
@@ -5,6 +6,8 @@ import time
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
+MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
+MESSAGE_TYPE_START_GAME = 'start_game'
 
 
 class gameRunner(threading.Thread):
@@ -17,15 +20,14 @@ class gameRunner(threading.Thread):
         self.control_queue = server.input_queue
         self.logger = server.logger
         self.clients = []
-        self.keyboard_disabled = options['keyboard_disabled']
-        self.role = ''
+        self.role = options['myrole']
+        self.server.role = self.role
+        self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
+        self.delOption('myrole')
 
     def run(self):
         while self.alive:
-            if self.keyboard_disabled:
-                time.sleep(500)
-                continue
             time.sleep(0.01)
             if self.control_queue.isEmpty():
                 continue
@@ -41,7 +43,11 @@ class gameRunner(threading.Thread):
         try:
             if msg == 'gamestart':
                 # >gamestart
+                if self.started:
+                    return
                 thread.start_new_thread(self.runGame, ())
+                message = {"agent": self.role}
+                self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
                 # >connect 127.0.0.1 8080
             elif 'connect' in msg:
@@ -56,6 +62,7 @@ class gameRunner(threading.Thread):
                 # >setrole B1
                 args = msg.split(' ')
                 self.role = args[1]
+                self.server.role = self.role
             elif 'send' in msg:
                 # >send 127.0.0.1 8080 "You are a pacman."
                 args = msg.split(' ')
@@ -64,11 +71,13 @@ class gameRunner(threading.Thread):
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
 
     def handleArrowControl(self, key):
-        # todo: test this function
+        if not self.started:
+            return
         try:
             message = {"agent": self.role, "direction": key,
                        "server_info": {"ip": self.server.ip, "port": self.server.port}}
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
+            self.server.recv_queue.push(self.makeFakeControlMessage(message))
         except Exception as e:
             self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
 
@@ -94,3 +103,6 @@ class gameRunner(threading.Thread):
         games = runGames(**self.options)
         self.started = False
         save_score(games[0])
+
+    def makeFakeControlMessage(self, message):
+        return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}

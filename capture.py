@@ -908,8 +908,10 @@ def readCommand(argv):
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
     numKeyboardAgents = 0
+    agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
         if not val: continue
+        args['myrole'] = agents_enum[index]
         if numKeyboardAgents == 0:
             agent = keyboardAgents.KeyboardAgent(index)
         elif numKeyboardAgents == 1:

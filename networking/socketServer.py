@@ -27,11 +27,12 @@ class socketServer(threading.Thread):
         self.recv_queue = Queue()
         self.message_handler = messageHandler(server=self, recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
-        self.input_handler = inputHandler(self)
+        self.input_handler = inputHandler(self, enabled=True)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
         self.alive = True
         self.logger = logger
+        self.role = ''
 
     def run(self):
         self.message_handler.start()
@@ -73,7 +74,7 @@ class socketServer(threading.Thread):
         for node in self.node_map:
             server_info = node['server']
             server_ip, server_port = server_info['ip'], server_info['port']
-            self.sendMsg((server_ip, server_info), msg_type, msg)
+            self.sendMsg((server_ip, server_port), msg_type, msg)
 
     def join(self, timeout=None):
         self.alive = False

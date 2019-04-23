@@ -8,18 +8,21 @@ INPUT_MODE = 1
 
 
 class inputHandler(threading.Thread):
-    def __init__(self, server):
+    def __init__(self, server, enabled):
         super(inputHandler, self).__init__()
         self.gameStarted = False
         self.buffer = server.input_queue
         keyboard.on_press(self.key_press)
         self.msgbuffer = ""
+        self.enabled = enabled
 
     def run(self):
         while True:
             time.sleep(500)
 
     def key_press(self, key):
+        if not self.enabled:
+            return
         try:
             key_name = str(key.name)
         except Exception:
@@ -37,3 +40,6 @@ class inputHandler(threading.Thread):
                     self.msgbuffer = self.msgbuffer[:-1]
             elif len(key_name) == 1:
                 self.msgbuffer += key_name
+
+    def setEnabled(self, enabled):
+        self.enabled = enabled

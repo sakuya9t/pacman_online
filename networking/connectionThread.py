@@ -22,8 +22,6 @@ class connectionThread(threading.Thread):
                     break
                 self.recv_queue.push({"ip": self.client_ip, "port": self.client_port,
                                       "message": message})
-                # self.send_queue.push({"ip": self.client_ip, "port": self.client_port,
-                #                       "message": {"type": "test_msg", "content": "I received your message."}})
             except Exception as e:
                 self.logger.error("Error in connection thread with {ip}:{port}: {err}"
                                   .format(ip=self.client_ip, port=self.client_port, err=str(e)))
