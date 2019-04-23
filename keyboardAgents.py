@@ -22,10 +22,10 @@ class KeyboardAgent(Agent):
     An agent controlled by the keyboard.
     """
     # NOTE: Arrow keys also work.
-    WEST_KEY = 'a'
-    EAST_KEY = 'd'
-    NORTH_KEY = 'w'
-    SOUTH_KEY = 's'
+    WEST_KEY = 'left'
+    EAST_KEY = 'right'
+    NORTH_KEY = 'up'
+    SOUTH_KEY = 'down'
     STOP_KEY = 'q'
 
     def __init__(self, index=0):

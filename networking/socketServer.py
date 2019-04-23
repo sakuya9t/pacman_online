@@ -21,16 +21,18 @@ class socketServer(threading.Thread):
         self.ip = bind_ip
         self.port = port
         self.connection_pool = []
+        self.node_map = []
         self.send_queue = Queue()
-        self.send_queue_thread = messageQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
+        self.send_queue_thread = messageSendingQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
-        self.message_handler = messageHandler(recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
+        self.message_handler = messageHandler(server=self, recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
-        self.input_handler = inputHandler(self)
+        self.input_handler = inputHandler(self, enabled=True)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
         self.alive = True
         self.logger = logger
+        self.role = ''
 
     def run(self):
         self.message_handler.start()
@@ -43,12 +45,36 @@ class socketServer(threading.Thread):
         logger.info("Server listening on {ip}:{port}".format(ip=self.ip, port=self.port))
         while self.alive:
             connection, addr = server.accept()
-            client_ip, client_port = addr
-            logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
-            connection_thread = connectionThread(self.conn_id, connection, self.recv_queue, self.send_queue, logger)
-            connection_thread.start()
-            self.conn_id += 1
-            self.connection_pool.append(connection_thread)
+            self.passiveConnect(connection, addr)
+
+    def activeConnect(self, ip, port):
+        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.connect((ip, port))
+        logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
+        connection_thread = connectionThread(self.conn_id, conn, self, logger)
+        connection_thread.start()
+        self.conn_id += 1
+        self.connection_pool.append(connection_thread)
+
+    def passiveConnect(self, connection, addr):
+        client_ip, client_port = addr
+        logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
+        connection_thread = connectionThread(self.conn_id, connection, self, logger)
+        connection_thread.start()
+        self.conn_id += 1
+        self.connection_pool.append(connection_thread)
+
+    def sendMsg(self, addr, msg_type, msg):
+        target_ip, target_port = addr
+        msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
+        self.send_queue.push(msg_packet)
+
+    def sendToAllOtherPlayers(self, msg_type, msg):
+        logger.info("Send message to all other players: {msg}".format(msg=msg))
+        for node in self.node_map:
+            server_info = node['server']
+            server_ip, server_port = server_info['ip'], server_info['port']
+            self.sendMsg((server_ip, server_port), msg_type, msg)
 
     def join(self, timeout=None):
         self.alive = False
@@ -79,9 +105,9 @@ class connectionRecycleThread(threading.Thread):
         self.alive = False
 
 
-class messageQueueThread(threading.Thread):
+class messageSendingQueueThread(threading.Thread):
     def __init__(self, queue, buf_type, pool):
-        super(messageQueueThread, self).__init__()
+        super(messageSendingQueueThread, self).__init__()
         self.queue = queue
         self.type = buf_type
         self.pool = pool
@@ -95,7 +121,7 @@ class messageQueueThread(threading.Thread):
             msg = self.queue.pop()
             target_addr = (msg['ip'], msg['port'])
             target_conn = list(filter(lambda x: (x.client_ip, x.client_port).__eq__(target_addr), self.pool))
-            if len(target_conn) == 1:
+            if len(target_conn) > 0:
                 target_conn[0].send(json.dumps(msg))
             logger.info("Send message: {msg}".format(msg=msg))
 
