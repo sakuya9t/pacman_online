@@ -64,12 +64,14 @@ def run():
         pos, type = wait_for_click()
         screen.listen(pos, type)
         if playing:
-            # Switch to pacman graphics
+            # Switch to pacman graphics and simulate typing gamestart
             screen = options['display']
+            server.input_queue.push({'msg': 'gamestart'})
 
             game_runner = gameRunner(server=server, options=options)
             game_runner.start()
 
+            # TODO: MERGE THIS WITH MAIN WHILE LOOP
             while playing:
                 # pos, type = wait_for_click()
                 # screen.listen(pos, type)
