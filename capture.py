@@ -430,9 +430,6 @@ class CaptureRules:
                         globals.result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
                 print globals.result
 
-                # Set the playing flag to false
-                globals.playing = False
-
     def getProgress(self, game):
         blue = 1.0 - (game.state.getBlueFood().count() / float(self._initBlueFood))
         red = 1.0 - (game.state.getRedFood().count() / float(self._initRedFood))

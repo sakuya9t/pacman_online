@@ -24,10 +24,16 @@ global options
 # Whether a game is in progress
 global playing
 
+# Switch to another screen
 def transition(name):
     global screen
+    global options
     if name == 'About':
         screen = AboutScreen()
+    elif name == 'Game':
+        # Switch to pacman graphics and simulate typing gamestart
+        screen = options['display']
+        startGameRunner()
     elif name == 'Menu':
         screen = MenuScreen()
     elif name == 'Room':
@@ -35,6 +41,7 @@ def transition(name):
     elif name == 'Result':
         screen = ResultScreen()
 
+# Initialise global variables
 def initialize():
     global screen
     global exit
@@ -47,6 +54,7 @@ def initialize():
     playing = False
     result = ''
 
+# Main loop of the UI component
 def run():
     global screen
     global exit
@@ -61,29 +69,21 @@ def run():
     # Listen for events
     while (not exit):
         screen.draw()
-        pos, type = wait_for_click()
-        screen.listen(pos, type)
-        if playing:
-            # Switch to pacman graphics and simulate typing gamestart
-            screen = options['display']
-            server.input_queue.push({'msg': 'gamestart'})
+        if not playing:
+            pos, type = wait_for_click()
+            screen.listen(pos, type)
 
-            game_runner = gameRunner(server=server, options=options)
-            game_runner.start()
-
-            # TODO: MERGE THIS WITH MAIN WHILE LOOP
-            while playing:
-                # pos, type = wait_for_click()
-                # screen.listen(pos, type)
-                continue
-
-            game_runner.join()
-
-            clear_screen()
-            transition('Result')
+    # Destroy graphics
     end_graphics()
 
-def draw():
-    global screen
-    print(screen)
-    screen.draw()
+# Start GameRunner class
+def startGameRunner():
+    global playing
+    playing = True
+    server.input_queue.push({'msg': 'gamestart'})
+
+    game_runner = gameRunner(server=server, options=options)
+    game_runner.start()
+
+# def endGameRunner():
+#     game_runner.join()

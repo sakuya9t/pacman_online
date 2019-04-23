@@ -233,8 +233,8 @@ class PacmanGraphics(Screen):
         self.endButton = Button(500, 32, 'End', 'red', 'End')
         self.endButton.draw()
 
-    def draw(self, state):
-        print('hello')
+    def draw(self):
+        pass
 
     def listen(self, pos, type):
         if self.endButton.contains(pos[0], pos[1]):
@@ -481,6 +481,8 @@ class PacmanGraphics(Screen):
 
     def finish(self):
         print('Game has ended')
+        globals.playing = False
+        globals.transition('Result')
         # end_graphics()
 
     def to_screen(self, point):
