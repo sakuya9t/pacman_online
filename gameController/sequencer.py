@@ -32,7 +32,7 @@ class Sequencer(threading.Thread):
                 # start new round if all the previous tail are pop
                 if (self.pre_r1_tail != r1_tail and self.pre_r2_tail != r2_tail and
                     self.pre_b1_tail != b1_tail and self.pre_b2_tail != b2_tail):
-                    
+
                     self.pre_r1_tail = r1_tail
                     self.pre_r2_tail = r2_tail
                     self.pre_b1_tail = b1_tail
@@ -50,6 +50,8 @@ class Sequencer(threading.Thread):
                    "server_info": {"ip": self.server.ip, "port": self.server.port},
                    "msg_count": value[0],
                    "group_sequence": self.g_seq}
+
+        # TODO send real messages to other players
         # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
         self.server.recv_queue.push(self.makeFakeControlMessage(message))
         self.g_seq += 1
