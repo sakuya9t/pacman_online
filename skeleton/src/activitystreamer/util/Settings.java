@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Settings {
-	private static final Logger log = LogManager.getLogger();
+//	private static final Logger log = LogManager.getLogger();
 	private static SecureRandom random = new SecureRandom();
 	private static int localPort = 3780;
 	private static String localHostname = "localhost";
@@ -25,7 +25,7 @@ public class Settings {
 
 	public static void setLocalPort(int localPort) {
 		if(localPort<0 || localPort>65535){
-			log.error("supplied port "+localPort+" is out of range, using "+getLocalPort());
+//			log.error("supplied port "+localPort+" is out of range, using "+getLocalPort());
 		} else {
 			Settings.localPort = localPort;
 		}
@@ -37,7 +37,7 @@ public class Settings {
 
 	public static void setRemotePort(int remotePort) {
 		if(remotePort<0 || remotePort>65535){
-			log.error("supplied port "+remotePort+" is out of range, using "+getRemotePort());
+//			log.error("supplied port "+remotePort+" is out of range, using "+getRemotePort());
 		} else {
 			Settings.remotePort = remotePort;
 		}

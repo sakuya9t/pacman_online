@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import activitystreamer.util.Settings;
 
 public class Listener extends Thread{
-	private static final Logger log = LogManager.getLogger();
+//	private static final Logger log = LogManager.getLogger();
 	private ServerSocket serverSocket=null;
 	private boolean term = false;
 	private int portnum;
@@ -23,14 +23,14 @@ public class Listener extends Thread{
 	
 	@Override
 	public void run() {
-		log.info("listening for new connections on "+portnum);
+//		log.info("listening for new connections on "+portnum);
 		while(!term){
 			Socket clientSocket;
 			try {
 				clientSocket = serverSocket.accept();
 				Control.getInstance().incomingConnection(clientSocket);
 			} catch (IOException e) {
-				log.info("received exception, shutting down");
+//				log.info("received exception, shutting down");
 				term=true;
 			}
 		}

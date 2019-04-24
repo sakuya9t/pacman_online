@@ -17,7 +17,7 @@ import activitystreamer.server.Control;
 import activitystreamer.util.Settings;
 
 public class Server {
-	private static final Logger log = LogManager.getLogger();
+//	private static final Logger log = LogManager.getLogger();
 	
 	private static void help(Options options){
 		String header = "An ActivityStream Server for Unimelb COMP90015\n\n";
@@ -29,7 +29,7 @@ public class Server {
 	
 	public static void main(String[] args) {
 		
-		log.info("reading command line options");
+//		log.info("reading command line options");
 		
 		Options options = new Options();
 		options.addOption("lp",true,"local port number");
@@ -55,7 +55,7 @@ public class Server {
 				int port = Integer.parseInt(cmd.getOptionValue("lp"));
 				Settings.setLocalPort(port);
 			} catch (NumberFormatException e){
-				log.info("-lp requires a port number, parsed: "+cmd.getOptionValue("lp"));
+//				log.info("-lp requires a port number, parsed: "+cmd.getOptionValue("lp"));
 				help(options);
 			}
 		}
@@ -69,7 +69,7 @@ public class Server {
 				int port = Integer.parseInt(cmd.getOptionValue("rp"));
 				Settings.setRemotePort(port);
 			} catch (NumberFormatException e){
-				log.error("-rp requires a port number, parsed: "+cmd.getOptionValue("rp"));
+//				log.error("-rp requires a port number, parsed: "+cmd.getOptionValue("rp"));
 				help(options);
 			}
 		}
@@ -79,7 +79,7 @@ public class Server {
 				int a = Integer.parseInt(cmd.getOptionValue("a"));
 				Settings.setActivityInterval(a);
 			} catch (NumberFormatException e){
-				log.error("-a requires a number in milliseconds, parsed: "+cmd.getOptionValue("a"));
+//				log.error("-a requires a number in milliseconds, parsed: "+cmd.getOptionValue("a"));
 				help(options);
 			}
 		}
@@ -87,7 +87,7 @@ public class Server {
 		try {
 			Settings.setLocalHostname(InetAddress.getLocalHost().getHostAddress());
 		} catch (UnknownHostException e) {
-			log.warn("failed to get localhost IP address");
+//			log.warn("failed to get localhost IP address");
 		}
 		
 		if(cmd.hasOption("lh")){
@@ -98,7 +98,7 @@ public class Server {
 			Settings.setSecret(cmd.getOptionValue("s"));
 		}
 		
-		log.info("starting server");
+//		log.info("starting server");
 		
 		
 		final Control c = Control.getInstance(); 
