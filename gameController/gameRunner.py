@@ -11,6 +11,12 @@ MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 
+MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
+MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
+MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
+MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
+MESSAGE_TYPE_START_GAME = 'start_game'
+
 
 class gameRunner(threading.Thread):
     def __init__(self, server, options):
