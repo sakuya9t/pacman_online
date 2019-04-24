@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-#
+# 
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -20,7 +20,6 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-import traceback
 """
 Capture.py holds the logic for Pacman capture the flag.
 
@@ -58,15 +57,9 @@ from util import nearestPoint
 from util import manhattanDistance
 from game import Grid
 from game import Configuration
-import sys
-import util
-import random
-import imp
+import sys, util, random, imp
 import keyboardAgents
 from gameController import socketAgents
-from networking.inputHandler import inputHandler
-from networking.sequencer import Sequencer
-import socket
 
 # If you change these, you won't affect the server, so you can't cheat
 KILL_POINTS = 0
@@ -297,16 +290,14 @@ class GameState:
             for teammate in team:
                 if util.manhattanDistance(enemyPos, state.getAgentPosition(teammate)) <= SIGHT_RANGE:
                     seen = True
-            if not seen:
-                state.data.agentStates[enemy].configuration = None
+            if not seen: state.data.agentStates[enemy].configuration = None
         return state
 
     def __eq__(self, other):
         """
         Allows two states to be compared.
         """
-        if other == None:
-            return False
+        if other == None: return False
         return self.data == other.data
 
     def __hash__(self):
@@ -351,8 +342,7 @@ def halfGrid(grid, red):
 
     for y in range(grid.height):
         for x in xrange:
-            if grid[x][y]:
-                halfgrid[x][y] = True
+            if grid[x][y]: halfgrid[x][y] = True
 
     return halfgrid
 
@@ -433,8 +423,7 @@ class CaptureRules:
                         print 'Tie game!'
                     else:
                         winner = 'Red'
-                        if state.data.score < 0:
-                            winner = 'Blue'
+                        if state.data.score < 0: winner = 'Blue'
                         print 'The %s team wins by %d points.' % (winner, abs(state.data.score))
 
     def getProgress(self, game):
@@ -706,11 +695,9 @@ class AgentRules:
         if agentState.isPacman:
             for index in otherTeam:
                 otherAgentState = state.data.agentStates[index]
-                if otherAgentState.isPacman:
-                    continue
+                if otherAgentState.isPacman: continue
                 ghostPosition = otherAgentState.getPosition()
-                if ghostPosition == None:
-                    continue
+                if ghostPosition == None: continue
                 if manhattanDistance(ghostPosition, agentState.getPosition()) <= COLLISION_TOLERANCE:
                     # award points to the other team for killing Pacmen
                     if otherAgentState.scaredTimer <= 0:
@@ -734,11 +721,9 @@ class AgentRules:
         else:  # Agent is a ghost
             for index in otherTeam:
                 otherAgentState = state.data.agentStates[index]
-                if not otherAgentState.isPacman:
-                    continue
+                if not otherAgentState.isPacman: continue
                 pacPos = otherAgentState.getPosition()
-                if pacPos == None:
-                    continue
+                if pacPos == None: continue
                 if manhattanDistance(pacPos, agentState.getPosition()) <= COLLISION_TOLERANCE:
                     # award points to the other team for killing Pacmen
                     if agentState.scaredTimer <= 0:
@@ -777,8 +762,7 @@ def default(str):
 
 
 def parseAgentArgs(str):
-    if str == None or str == '':
-        return {}
+    if str == None or str == '': return {}
     pieces = str.split(',')
     opts = {}
     for p in pieces:
@@ -867,6 +851,8 @@ def readCommand(argv):
                       help='Catch exceptions and enforce time limits')
     parser.add_option('--port', dest='port', type='int',
                       help=default('Port number of game receiver'), default=8080)
+    parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
+                      help='Disable the keyboard so that we can test only one input.', default=False)
 
     options, otherjunk = parser.parse_args(argv)
     assert len(otherjunk) == 0, "Unrecognized options: " + str(otherjunk)
@@ -898,8 +884,7 @@ def readCommand(argv):
     args['redTeamName'] = options.red_name
     args['blueTeamName'] = options.blue_name
 
-    if options.fixRandomSeed:
-        random.seed('cs188')
+    if options.fixRandomSeed: random.seed('cs188')
 
     # Special case: recorded games don't use the runGames method or args structure
     if options.replay != None:
@@ -923,9 +908,10 @@ def readCommand(argv):
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
     numKeyboardAgents = 0
+    agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
-        if not val:
-            continue
+        if not val: continue
+        args['myrole'] = agents_enum[index]
         if numKeyboardAgents == 0:
             agent = keyboardAgents.KeyboardAgent(index)
         elif numKeyboardAgents == 1:
@@ -955,8 +941,7 @@ def readCommand(argv):
             raise Exception('You must use a capture layout with capture.py')
         else:
             l = layout.getLayout(options.layout)
-        if l == None:
-            raise Exception("The layout " + options.layout + " cannot be found")
+        if l == None: raise Exception("The layout " + options.layout + " cannot be found")
 
         layouts.append(l)
 
@@ -967,6 +952,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
 
@@ -977,6 +963,9 @@ def randomLayout(seed=None):
     # print 'Generating random layout in %s' % layout
     import mazeGenerator
     return mazeGenerator.generateMaze(seed)
+
+
+import traceback
 
 
 def loadAgents(isRed, factory, textgraphics, cmdLineArgs):
@@ -1054,13 +1043,11 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
             rules.quiet = False
         g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
         g.run()
-        if not beQuiet:
-            games.append(g)
+        if not beQuiet: games.append(g)
 
         g.record = None
         if record:
-            import cPickle
-            import game
+            import cPickle, game
             # fname = ('recorded-game-%d' % (i + 1)) +  '-'.join([str(t) for t in time.localtime()[1:6]])
             # f = file(fname, 'w')
             components = {'layout': layout, 'agents': [game.Agent() for a in agents], 'actions': g.moveHistory,
@@ -1092,40 +1079,20 @@ if __name__ == '__main__':
     """
     The main function called when pacman.py is run
     from the command line:
-
+  
     > python capture.py
-
+  
     See the usage string for more details.
-
+  
     > python capture.py --help
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
-    server = socketServer(serverID=generateServerID(
-        options['port']), bind_ip='0.0.0.0', port=options['port'])
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
     del options['port']
-
-    # connect to self server
-    # TODO connect to all other players
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    conn.connect(('127.0.0.1', 8080))
-
-    # how to get the agent? Assume agent B1 for now
-    # TODO inputHandler also need all socket to other servers
-    agent = "B1"
-    input_handler = inputHandler(server, agent, conn)
-    input_handler.start()
-
-    # make B1 the sequencer
-    # TODO sequencer also need all socket to other servers
-    if agent == "B1":
-        sequencer = Sequencer(server.message_handler.r1_hold_q, server.message_handler.r2_hold_q,
-                              server.message_handler.b1_hold_q, server.message_handler.b2_hold_q,
-                              conn)
-        sequencer.start()
 
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:
