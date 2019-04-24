@@ -13,6 +13,7 @@
 
 
 from graphicsUtils import *
+import graphicsUtils
 import math, time
 from game import Directions
 
@@ -20,7 +21,6 @@ from game import Directions
 #  GRAPHICS DISPLAY CODE  #
 ###########################
 
-import globals
 from ui.screen import Screen
 
 # Simple Button
@@ -49,7 +49,7 @@ class Button:
     # Updates current screen based on button functionality
     def click(self):
         print(self.text)
-        globals.transition('Menu')
+        graphicsUtils.transition('Menu')
 
 ###########################\
 
@@ -203,7 +203,6 @@ class InfoPane:
     def clearMessage(self):
         pass
 
-
 class PacmanGraphics(Screen):
     def __init__(self, redTeam, blueTeam, zoom=1.0, frameTime=0.0, capture=False):
         self.expandedCells = []
@@ -229,16 +228,11 @@ class PacmanGraphics(Screen):
         # Information
         self.previousState = state
 
-        ## Add buttons to ui
-        self.endButton = Button(500, 32, 'End', 'red', 'End')
-        self.endButton.draw()
-
     def draw(self):
         pass
 
     def listen(self, pos, type):
-        if self.endButton.contains(pos[0], pos[1]):
-            self.endButton.click()
+        pass
 
     def startGraphics(self, state):
         self.layout = state.layout
@@ -481,8 +475,8 @@ class PacmanGraphics(Screen):
 
     def finish(self):
         print('Game has ended')
-        globals.playing = False
-        globals.transition('Result')
+        graphicsUtils.playing = False
+        graphicsUtils.transition('Result')
         # end_graphics()
 
     def to_screen(self, point):

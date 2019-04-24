@@ -15,7 +15,6 @@
 import time
 from graphicsUtils import *
 from ui.screen import Screen
-import globals
 
 try:
     import pacman
@@ -97,6 +96,6 @@ class PacmanGraphics(Screen):
             self.backButton.click()
 
     def finish(self):
-        globals.playing = False
-        globals.transition('Result')
+        graphicsUtils.playing = False
+        graphicsUtils.transition('Result')
         print('Game has ended')

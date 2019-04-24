@@ -1,4 +1,5 @@
 from graphicsUtils import *
+import graphicsUtils
 
 # Simple Button
 class Button:
@@ -15,8 +16,8 @@ class Button:
 
     # Renders the button and text on screen
     def draw(self):
-        rectangle((self.x, self.y), self.h, self.w, self.color, filled=1, behind=0)
-        text((self.x, self.y), 'white', self.text, 'Helvetica', 12, 'normal', None)
+        graphicsUtils.rectangle((self.x, self.y), self.h, self.w, self.color, filled=1, behind=0)
+        graphicsUtils.text((self.x, self.y), 'white', self.text, 'Helvetica', 12, 'normal', None)
 
     # Returns True if a click is registered within the button area
     def contains(self, x, y):

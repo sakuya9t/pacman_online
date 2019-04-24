@@ -1,7 +1,7 @@
 from button import Button
 from graphicsUtils import *
 from screen import Screen
-import globals
+import graphicsUtils
 
 # Display game results
 class ResultScreen(Screen):
@@ -12,12 +12,12 @@ class ResultScreen(Screen):
 
     def draw(self):
         global result
-        clear_screen()
+        graphicsUtils.clear_screen()
 
         # Draw menu title
-        rectangle((500, 100), 32, 256, 'red', 1, 0)
-        text((500, 90), 'white', 'Results', 'Helvetica', 12, 'normal', None)
-        text((500, 110), 'white', globals.result, 'Helvetica', 12, 'normal', None)
+        graphicsUtils.rectangle((500, 100), 32, 256, 'red', 1, 0)
+        graphicsUtils.text((500, 90), 'white', 'Results', 'Helvetica', 12, 'normal', None)
+        graphicsUtils.text((500, 110), 'white', graphicsUtils.result, 'Helvetica', 12, 'normal', None)
 
         # Draw buttons
         self.backButton.draw()
@@ -27,4 +27,4 @@ class ResultScreen(Screen):
             self.backButton.click()
 
     def backButtonFunction(self):
-        globals.transition('Menu')
+        graphicsUtils.transition('Menu')

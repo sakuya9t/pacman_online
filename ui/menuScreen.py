@@ -1,7 +1,7 @@
 from button import Button
 from graphicsUtils import *
 from screen import Screen
-import globals
+import graphicsUtils
 
 # Main Menu
 class MenuScreen(Screen):
@@ -13,15 +13,15 @@ class MenuScreen(Screen):
         self.quitButton = Button(500, 500, 'Quit', 'red', 'Quit', self.quitButtonFunction)
 
     def draw(self):
-        clear_screen()
+        graphicsUtils.clear_screen()
 
         # Draw menu title
-        rectangle((500, 100), 32, 256, 'red', 1, 0)
-        text((500, 90), 'white', 'Distributed Pacman', 'Helvetica', 12, 'normal', None)
-        text((500, 110), 'white', 'Zijian Wang | Nai Wang | Leewei Kuo | Ivan Chee', 'Helvetica', 12, 'normal', None)
+        graphicsUtils.rectangle((500, 100), 32, 256, 'red', 1, 0)
+        graphicsUtils.text((500, 90), 'white', 'Distributed Pacman', 'Helvetica', 12, 'normal', None)
+        graphicsUtils.text((500, 110), 'white', 'Zijian Wang | Nai Wang | Leewei Kuo | Ivan Chee', 'Helvetica', 12, 'normal', None)
 
         # Pacman logo
-        circle((500, 200), 32, 'red', 'yellow', None, 'pieslice', 2)
+        graphicsUtils.circle((500, 200), 32, 'red', 'yellow', None, 'pieslice', 2)
 
         # Draw buttons
         self.startButton.draw()
@@ -37,10 +37,10 @@ class MenuScreen(Screen):
             self.quitButton.click()
 
     def startButtonFunction(self):
-        globals.transition('Room')
+        graphicsUtils.transition('Room')
 
     def aboutButtonFunction(self):
-        globals.transition('About')
+        graphicsUtils.transition('About')
 
     def quitButtonFunction(self):
-        globals.exit = True
+        graphicsUtils.exit = True

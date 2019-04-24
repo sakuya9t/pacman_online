@@ -36,6 +36,116 @@ def getRoot():
     global _root_window
     return _root_window
 
+from ui.aboutScreen import AboutScreen
+# from graphicsUtils import *
+from ui.menuScreen import MenuScreen
+from ui.resultScreen import ResultScreen
+from ui.roomScreen import RoomScreen
+# from ui.clickListener import ClickListener
+from gameController.gameRunner import gameRunner
+
+# Keeps track of the current screen displayed
+global screen
+
+# Determines whether the program should exit
+global exit
+
+# Keeps track of the previous game's result
+global result
+
+# Server component
+global server
+
+# Command line options
+global options
+
+# Whether a game is in progress
+global playing
+
+# Click event
+# global click
+
+# Switch to another screen
+def transition(name):
+    global screen
+    global options
+    if name == 'About':
+        screen = AboutScreen()
+    elif name == 'Game':
+        # Switch to pacman graphics and simulate typing gamestart
+        screen = options['display']
+        startGameRunner()
+    elif name == 'Menu':
+        screen = MenuScreen()
+    elif name == 'Room':
+        screen = RoomScreen()
+    elif name == 'Result':
+        screen = ResultScreen()
+        endGameRunner()
+
+# Initialise global variables
+def initialize():
+    global screen
+    global exit
+    global result
+    global playing
+    global click
+
+    # Set the menu screen as the point of entry
+    screen = MenuScreen()
+    exit = False
+    playing = False
+    result = ''
+    click = None
+
+# Main loop of the UI component
+def run():
+    global screen
+    global exit
+    global result
+    global playing
+    global server
+    global options
+    global click
+
+    # Initialise graphics
+    begin_graphics(1000.0, 640.0, formatColor(0, 0, 0), "Distributed Pacman")
+
+    # Initialise click listener
+    # listener = ClickListener()
+    # listener.start()
+
+    # Listen for events
+    while not exit:
+        screen.draw()
+        pos, type = wait_for_click()
+        screen.listen(pos, type)
+
+    # Destroy graphics
+    end_graphics()
+
+# Start GameRunner class
+def startGameRunner():
+    global playing
+    global server
+    global options
+    playing = True
+    server.input_queue.push({'msg': 'gamestart'})
+
+    # game_runner = gameRunner(server=server, options=options)
+    # game_runner.start()
+    if 'keyboard_disabled' in options:
+        del options['keyboard_disabled']
+    if 'myrole' in options:
+        del options['myrole']
+    from capture import runGames, save_score
+    games = runGames(**options)
+    save_score(games[0])
+
+def endGameRunner():
+    # game_runner.join()
+    pass
+
 
 def formatColor(r, g, b):
     return '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
@@ -114,20 +224,24 @@ _leftclick_loc = None
 _rightclick_loc = None
 _ctrl_leftclick_loc = None
 
-
 def _leftclick(event):
     global _leftclick_loc
     _leftclick_loc = (event.x, event.y)
-
+    # global screen
+    # screen.listen(_leftclick_loc, 'left')
 
 def _rightclick(event):
     global _rightclick_loc
     _rightclick_loc = (event.x, event.y)
+    # global screen
+    # screen.listen(_leftclick_loc, 'right')
 
 
 def _ctrl_leftclick(event):
     global _ctrl_leftclick_loc
     _ctrl_leftclick_loc = (event.x, event.y)
+    # global screen
+    # screen.listen(_leftclick_loc, 'ctrl_left')
 
 
 def wait_for_click():

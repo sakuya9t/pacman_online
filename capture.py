@@ -62,7 +62,7 @@ import keyboardAgents
 from gameController import socketAgents
 
 from graphicsUtils import *
-import globals
+import graphicsUtils
 
 # If you change these, you won't affect the server, so you can't cheat
 KILL_POINTS = 0
@@ -417,18 +417,18 @@ class CaptureRules:
                         blueCount += agentState.numReturned
 
                 if blueCount >= foodToWin:  # state.getRedFood().count() == MIN_FOOD:
-                    globals.result = 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
+                    graphicsUtils.result = 'The Blue team has returned at least %d of the opponents\' dots.' % foodToWin
                 elif redCount >= foodToWin:  # state.getBlueFood().count() == MIN_FOOD:
-                    globals.result = 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
+                    graphicsUtils.result = 'The Red team has returned at least %d of the opponents\' dots.' % foodToWin
                 else:  # if state.getBlueFood().count() > MIN_FOOD and state.getRedFood().count() > MIN_FOOD:
                     print 'Time is up.'
                     if state.data.score == 0:
-                        globals.result = 'Tie game!'
+                        graphicsUtils.result = 'Tie game!'
                     else:
                         winner = 'Red'
                         if state.data.score < 0: winner = 'Blue'
-                        globals.result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
-                print globals.result
+                        graphicsUtils.result = 'The %s team wins by %d points.' % (winner, abs(state.data.score))
+                print graphicsUtils.result
 
     def getProgress(self, game):
         blue = 1.0 - (game.state.getBlueFood().count() / float(self._initBlueFood))
@@ -1098,34 +1098,34 @@ if __name__ == '__main__':
     # del options['port']
 
     # Initialise ui variables
-    globals.initialize()
+    graphicsUtils.initialize()
 
     # Get game components based on input
-    globals.options = readCommand(sys.argv[1:])
+    graphicsUtils.options = readCommand(sys.argv[1:])
 
-    # TODO: MOVE INTO GLOBALS SO UI CAN CONTROL
     # Initialise server
-    globals.server = socketServer(serverID=generateServerID(globals.options['port']), bind_ip='0.0.0.0', port=globals.options['port'])
+    graphicsUtils.server = socketServer(serverID=generateServerID(graphicsUtils.options['port']), bind_ip='0.0.0.0', port=graphicsUtils.options['port'])
     socket_agent_control_buffer = [
-        globals.server.message_handler.r1_queue,
-        globals.server.message_handler.b1_queue,
-        globals.server.message_handler.r2_queue,
-        globals.server.message_handler.b2_queue
+        graphicsUtils.server.message_handler.r1_queue,
+        graphicsUtils.server.message_handler.b1_queue,
+        graphicsUtils.server.message_handler.r2_queue,
+        graphicsUtils.server.message_handler.b2_queue
     ]
-    globals.server.start()
-    del globals.options['port']
+    graphicsUtils.server.start()
+    del graphicsUtils.options['port']
 
-    socketAgentIds = globals.options['socket_agent']
+    socketAgentIds = graphicsUtils.options['socket_agent']
     for index in socketAgentIds:
         agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index], index=index)
-        globals.options['agents'][index] = agent
-    del globals.options['socket_agent']
+        graphicsUtils.options['agents'][index] = agent
+    del graphicsUtils.options['socket_agent']
 
     # Run ui
-    globals.run()
+    graphicsUtils.run()
 
-    # Stop server
-    globals.server.join()
+    # Stop server and listener
+    graphicsUtils.server.join()
+    graphicsUtils.listener.join()
 
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')
