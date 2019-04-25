@@ -32,7 +32,6 @@ public class Listener extends Thread{
 				System.out.println("Incoming Connection Accepted");
 				Control.getInstance().incomingConnection(clientSocket);
 			} catch (IOException e) {
-//				log.info("received exception, shutting down");
 				term=true;
 			}
 		}

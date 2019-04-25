@@ -16,6 +16,12 @@ public class Settings {
 	private static String secret = null;
 	private static String username = "anonymous";
 
+	// final values
+	public final static String HEART_BEAT = "HEART_BEAT";
+	public final static String INITIAL_OUT = "INITIAL_OUT";
+	public final static String INITIAL_IN = "INITIAL_IN";
+
+
 	
 	public static int getLocalPort() {
 		return localPort;

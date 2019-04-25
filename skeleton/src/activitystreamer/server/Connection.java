@@ -23,6 +23,7 @@ public class Connection extends Thread {
 	private boolean open = false;
 	private Socket socket;
 	private boolean term=false;
+	private String conn_id = "";
 	
 	Connection(Socket socket) throws IOException{
 		in = new DataInputStream(socket.getInputStream());
@@ -37,7 +38,7 @@ public class Connection extends Thread {
 	/*
 	 * returns true if the message was written, otherwise false
 	 */
-	public boolean writeMsg(String msg) {
+	public boolean sendMsg(String msg) {
 		if(open){
 			outwriter.println(msg);
 			outwriter.flush();
@@ -84,4 +85,33 @@ public class Connection extends Thread {
 	public boolean isOpen() {
 		return open;
 	}
+
+	public String getSrcHost(){
+		return this.socket.getLocalAddress().toString().split("/")[1];
+	}
+
+	public int getSrcPort(){
+		return this.socket.getLocalPort();
+	}
+
+	public String getDestHost(){
+		return this.socket.getRemoteSocketAddress().toString().split(":")[0].split("/")[1];
+	}
+
+	public int getDestPort(){
+		return Integer.parseInt(this.socket.getRemoteSocketAddress().toString().split(":")[1]);
+	}
+
+	public void setConnId(String id){
+		this.conn_id = id;
+	}
+
+	public String getConnId(){
+		return this.conn_id;
+	}
+
+	public boolean isEqual(Connection c){
+		return this.conn_id == c.getConnId();
+	}
+
 }

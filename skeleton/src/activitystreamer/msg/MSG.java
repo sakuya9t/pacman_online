@@ -8,6 +8,7 @@ public class MSG {
     private int dest_port;
     private String body;
 
+    // separate init
     public MSG(String t, String sh, int sp, String dh, int dp, String b){
         this.type = t;
         this.src_host = sh;
@@ -17,23 +18,30 @@ public class MSG {
         this.body = b;
     }
 
+    // paring init
     public MSG(String s){
-        String[] subs = s.split("||");
-        this.type = subs[0];
-        this.src_host = subs[1];
-        this.src_port = Integer.parseInt(subs[2]);
-        this.dest_host = subs[3];
-        this.dest_port = Integer.parseInt(subs[4]);
+        String[] ss = s.split(";");
+        this.type = ss[0];
+        this.src_host = ss[1];
+        this.src_port = Integer.parseInt(ss[2]);
+        this.dest_host = ss[3];
+        this.dest_port = Integer.parseInt(ss[4]);
+        this.body = ss[5];
     }
 
     public String toSendString(){
-        String res = this.type.toString();
-        res += "||" + this.src_host;
-        res += "||" + this.src_port;
-        res += "||" + this.dest_host;
-        res += "||" + this.dest_port;
-        res += "||" + this.body;
+        String res = this.type;
+        res += ";" + this.src_host;
+        res += ";" + this.src_port;
+        res += ";" + this.dest_host;
+        res += ";" + this.dest_port;
+        res += ";" + this.body;
         return res;
+    }
+
+    // get message properties
+    public String getType(){
+        return this.type;
     }
 
     public String getSrcHost(){
