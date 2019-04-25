@@ -2,12 +2,14 @@ import json
 import thread
 import threading
 import time
+import os
 
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
+MESSAGE_TYPE_GET_READY = 'get_ready'
 
 
 class gameRunner(threading.Thread):
@@ -32,24 +34,26 @@ class gameRunner(threading.Thread):
             if self.control_queue.isEmpty():
                 continue
             msg = self.control_queue.pop()
-            self.logger.info("Keyboard input: {msg}".format(msg=msg))
+            # self.logger.info("Keyboard input: {msg}".format(msg=msg))
             if 'msg' in msg.keys():
                 self.handleMessage(msg['msg'])
             elif 'key' in msg.keys():
                 # key control event
                 self.handleArrowControl(msg['key'])
+        os._exit(0)
 
     def handleMessage(self, msg):
         try:
+            # >gamestart
             if msg == 'gamestart':
-                # >gamestart
                 if self.started:
                     return
                 thread.start_new_thread(self.runGame, ())
                 message = {"agent": self.role}
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
-                # >connect 127.0.0.1 8080
+
+            # >connect 127.0.0.1 8080
             elif 'connect' in msg:
                 if self.role == '':
                     self.logger.warning("Player role not set.")
@@ -58,15 +62,23 @@ class gameRunner(threading.Thread):
                 connection_args = msg.split(' ')
                 ip_addr, port = connection_args[1], int(connection_args[2])
                 self.connect(ip_addr, port)
+
+            # >setrole B1
             elif 'setrole' in msg:
-                # >setrole B1
                 args = msg.split(' ')
                 self.role = args[1]
                 self.server.role = self.role
+
+            # >send 127.0.0.1 8080 "You are a pacman."
             elif 'send' in msg:
-                # >send 127.0.0.1 8080 "You are a pacman."
                 args = msg.split(' ')
                 self.server.sendMsg((args[1], args[2]), MESSAGE_TYPE_NORMAL_MESSAGE, args[3])
+
+            # End the game and kill all threads.
+            # >exit
+            elif 'exit' == msg:
+                self.server.join()
+                self.alive = False
         except Exception as e:
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
 
@@ -84,9 +96,7 @@ class gameRunner(threading.Thread):
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
         # First send a message to tell the target server our server info
-        my_ip, my_port = self.server.ip, self.server.port
-        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER, {'ip': my_ip, 'port': my_port,
-                                                                         'agent_id': self.role})
+        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER, {'agent_id': self.role})
 
     def join(self, timeout=None):
         self.alive = False

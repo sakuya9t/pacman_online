@@ -1088,7 +1088,7 @@ if __name__ == '__main__':
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
