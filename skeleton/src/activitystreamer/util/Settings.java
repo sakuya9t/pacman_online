@@ -4,8 +4,6 @@ import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class Settings {
 //	private static final Logger log = LogManager.getLogger();

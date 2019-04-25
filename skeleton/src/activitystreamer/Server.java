@@ -16,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 import activitystreamer.server.Control;
 import activitystreamer.util.Settings;
 
+import javax.swing.plaf.synth.SynthEditorPaneUI;
+
 public class Server {
 //	private static final Logger log = LogManager.getLogger();
 	
@@ -62,12 +64,14 @@ public class Server {
 		
 		if(cmd.hasOption("rh")){
 			Settings.setRemoteHostname(cmd.getOptionValue("rh"));
+			System.out.println(Settings.getRemoteHostname());
 		}
 		
 		if(cmd.hasOption("rp")){
 			try{
 				int port = Integer.parseInt(cmd.getOptionValue("rp"));
 				Settings.setRemotePort(port);
+				System.out.println(Settings.getRemotePort());
 			} catch (NumberFormatException e){
 //				log.error("-rp requires a port number, parsed: "+cmd.getOptionValue("rp"));
 				help(options);

@@ -1,6 +1,5 @@
 package activitystreamer.server;
 
-
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -16,7 +15,7 @@ import activitystreamer.util.Settings;
 
 
 public class Connection extends Thread {
-	private static final Logger log = LogManager.getLogger();
+//	private static final Logger log = LogManager.getLogger();
 	private DataInputStream in;
 	private DataOutputStream out;
 	private BufferedReader inreader;
@@ -49,14 +48,14 @@ public class Connection extends Thread {
 	
 	public void closeCon(){
 		if(open){
-			log.info("closing connection "+Settings.socketAddress(socket));
+//			log.info("closing connection "+Settings.socketAddress(socket));
 			try {
 				term=true;
 				inreader.close();
 				out.close();
 			} catch (IOException e) {
 				// already closed?
-				log.error("received exception closing the connection "+Settings.socketAddress(socket)+": "+e);
+//				log.error("received exception closing the connection "+Settings.socketAddress(socket)+": "+e);
 			}
 		}
 	}
@@ -68,11 +67,11 @@ public class Connection extends Thread {
 			while(!term && (data = inreader.readLine())!=null){
 				term=Control.getInstance().process(this,data);
 			}
-			log.debug("connection closed to "+Settings.socketAddress(socket));
+//			log.debug("connection closed to "+Settings.socketAddress(socket));
 			Control.getInstance().connectionClosed(this);
 			in.close();
 		} catch (IOException e) {
-			log.error("connection "+Settings.socketAddress(socket)+" closed with exception: "+e);
+//			log.error("connection "+Settings.socketAddress(socket)+" closed with exception: "+e);
 			Control.getInstance().connectionClosed(this);
 		}
 		open=false;

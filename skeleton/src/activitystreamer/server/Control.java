@@ -30,6 +30,8 @@ public class Control extends Thread {
 		// start a listener
 		try {
 			listener = new Listener();
+			this.initiateConnection();
+			this.start();
 		} catch (IOException e1) {
 //			log.fatal("failed to startup a listening thread: "+e1);
 			System.exit(-1);
@@ -40,6 +42,7 @@ public class Control extends Thread {
 		// make a connection to another server if remote hostname is supplied
 		if(Settings.getRemoteHostname()!=null){
 			try {
+				System.out.println("Connecting to: " + Settings.getRemoteHostname() + " @ " + Settings.getRemotePort());
 				outgoingConnection(new Socket(Settings.getRemoteHostname(),Settings.getRemotePort()));
 			} catch (IOException e) {
 //				log.error("failed to make connection to "+Settings.getRemoteHostname()+":"+Settings.getRemotePort()+" :"+e);
@@ -88,6 +91,7 @@ public class Control extends Thread {
 	@Override
 	public void run(){
 //		log.info("using activity interval of "+Settings.getActivityInterval()+" milliseconds");
+		System.out.println("Run Interval");
 		while(!term){
 			// do something with 5 second intervals in between
 			try {
@@ -111,6 +115,8 @@ public class Control extends Thread {
 	}
 	
 	public boolean doActivity(){
+		System.out.println(	Settings.getLocalHostname() + " @ " + Settings.getLocalPort() +
+							" -- Connection Counts: " + this.getConnections().size());
 		return false;
 	}
 	
