@@ -10,6 +10,7 @@ import activitystreamer.util.Settings;
 
 public class Control extends Thread {
 	// control properties
+	private static ArrayList<String> dead_list;
 	private static ArrayList<Connection> connections;
 	private static boolean term=false;
 	private static Listener listener;
@@ -32,6 +33,8 @@ public class Control extends Thread {
 		connections = new ArrayList<Connection>();
 		// initialize peer_list
 		peer_list = new HashMap<>();
+		//initialize dead_list
+		dead_list = new ArrayList<String>();
 		// update self server ID as socket addr
 		this.server_id = Settings.getLocalHostname() + ":" + Settings.getLocalPort();
 		// start a listener
@@ -45,21 +48,23 @@ public class Control extends Thread {
 
 
 	}
-	
+
+	// initial connect
 	public void initiateConnection(){
 		// make a connection to another server if remote hostname is supplied
 		if(Settings.getRemoteHostname()!=null){
 			try {
-				isRoot = false;
+				this.isRoot = false;
 				Connection c = outgoingConnection(new Socket(Settings.getRemoteHostname(),Settings.getRemotePort()));
 				MSG m_io = new MSG(Settings.INITIAL_OUT, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), this.server_id);
 				c.sendMsg(m_io.toSendString());
 			} catch (IOException e) {
 				System.out.println("Can't Connect to Remote");
-//				System.exit(-1);
 			}
 		}
 	}
+
+
 	
 	/*
 	 * Processing incoming messages from the connection.
@@ -82,7 +87,8 @@ public class Control extends Thread {
 			c.sendMsg(m_ii.toSendString());
 			return false;
 		}
-		else if (rm.getType().equals(Settings.INITIAL_IN)){
+		else
+		if (rm.getType().equals(Settings.INITIAL_IN)){
 			String remote_peer_id = rm.getBody();
 			// write id to connection id
 			c.setConnId(remote_peer_id);
@@ -90,11 +96,12 @@ public class Control extends Thread {
 			peer_list.put(remote_peer_id, 0);
 			return false;
 		}
-		else if (rm.getType().equals(Settings.HEART_BEAT)){
+		else
+		if (rm.getType().equals(Settings.HEART_BEAT)){
 			// clear local entry's counter
 			String ent = rm.getBody();
 			peer_list.put(ent, 0);
-			// forwarding current HB to other peers except origin
+			// forwarding current HB to other peers except the origin
 			for(Connection conn : this.getConnections()){
 				if (!c.isEqual(conn)) {
 					// not send back
@@ -104,7 +111,13 @@ public class Control extends Thread {
 			}
 			return false;
 		}
-		// otherwise, close the connection
+		else
+		if (rm.getType().equals(Settings.CLIENT_OUT)) {
+			MSG m_ci = new MSG(Settings.CLIENT_IN, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), rm.getBody());
+			c.sendMsg(m_ci.toSendString());
+			return false;
+		}
+			// otherwise, close the connection
 		return true;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,9 +173,9 @@ public class Control extends Thread {
 		}
 		listener.setTerm(true);
 	}
-	
+
+	// do per interval
 	public boolean doActivity(){
-//		System.out.println(	Settings.getLocalHostname() + " @ " + Settings.getLocalPort() + " -- Connection Counts: " + this.getConnections().size());
 		if (this.getConnections().size() != 0){
 			for(Connection c : this.getConnections()){
 				MSG m_hb = new MSG(Settings.HEART_BEAT, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), this.server_id);
@@ -171,13 +184,27 @@ public class Control extends Thread {
 		}
 		else
 			System.out.println("No Connection");
+		// update local peer_list counter
 		for(String ent : this.peer_list.keySet()){
-			// each entry self-increment
 			int val = this.peer_list.get(ent);
-			this.peer_list.put(ent, val + 1);
+			val ++;
+			this.peer_list.put(ent, val);
 			System.out.println(ent + " = " + this.peer_list.get(ent));
+			// update the dead_list, containing peer_id of dead peers
+			if (val > Settings.DEAD_THRES){
+				// dead peer_id saved
+				this.dead_list.add(ent);
+			}
+			else {
+				this.dead_list.remove(ent);
+			}
 		}
-		System.out.println();
+		// print out dead peer ids
+		for(String dp : this.dead_list){
+			this.peer_list.remove(dp);
+			System.out.println("Dead Peer ID = " + dp);
+		}
+//		System.out.println();
 		return false;
 	}
 	

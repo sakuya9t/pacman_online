@@ -17,9 +17,13 @@ public class Settings {
 	private static String username = "anonymous";
 
 	// final values
+	public final static int DEAD_THRES = 5;
 	public final static String HEART_BEAT = "HEART_BEAT";
 	public final static String INITIAL_OUT = "INITIAL_OUT";
 	public final static String INITIAL_IN = "INITIAL_IN";
+	public final static String CLIENT_OUT = "CLIENT_OUT";
+	public final static String CLIENT_IN = "CLIENT_IN";
+
 
 
 	

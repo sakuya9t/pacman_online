@@ -5,6 +5,6 @@ public class MsgQueue {
     private ArrayList <MSG> q;
 
     public MsgQueue(){
-        q = new ArrayList<MSG> ();
+        q = new ArrayList<MSG>();
     }
 }
