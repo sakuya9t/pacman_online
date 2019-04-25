@@ -37,12 +37,12 @@ def getRoot():
     return _root_window
 
 from ui.aboutScreen import AboutScreen
-# from graphicsUtils import *
 from ui.menuScreen import MenuScreen
 from ui.resultScreen import ResultScreen
 from ui.roomScreen import RoomScreen
-# from ui.clickListener import ClickListener
 from gameController.gameRunner import gameRunner
+from gameController import socketAgents
+from networking.socketServer import socketServer, generateServerID
 
 # Keeps track of the current screen displayed
 global screen
@@ -62,9 +62,6 @@ global options
 # Whether a game is in progress
 global playing
 
-# Click event
-# global click
-
 # Switch to another screen
 def transition(name):
     global screen
@@ -72,13 +69,14 @@ def transition(name):
     if name == 'About':
         screen = AboutScreen()
     elif name == 'Game':
-        # Switch to pacman graphics and simulate typing gamestart
         screen = options['display']
         startGameRunner()
     elif name == 'Menu':
         screen = MenuScreen()
+        endServer()
     elif name == 'Room':
         screen = RoomScreen()
+        startServer()
     elif name == 'Result':
         screen = ResultScreen()
         endGameRunner()
@@ -90,6 +88,8 @@ def initialize():
     global result
     global playing
     global click
+    global options
+    global server
 
     # Set the menu screen as the point of entry
     screen = MenuScreen()
@@ -97,6 +97,8 @@ def initialize():
     playing = False
     result = ''
     click = None
+    server = None
+    options = None
 
 # Main loop of the UI component
 def run():
@@ -111,10 +113,6 @@ def run():
     # Initialise graphics
     begin_graphics(1000.0, 640.0, formatColor(0, 0, 0), "Distributed Pacman")
 
-    # Initialise click listener
-    # listener = ClickListener()
-    # listener.start()
-
     # Listen for events
     while not exit:
         screen.draw()
@@ -124,16 +122,74 @@ def run():
     # Destroy graphics
     end_graphics()
 
+def destroy():
+    global screen
+    global exit
+    global result
+    global playing
+    global click
+    global options
+    global server
+    global game_runner
+
+    screen = None
+    exit = True
+    playing = False
+    result = None
+    click = None
+    server = None
+    options = None
+    game_runner = None
+
+# Start server and options
+def startServer():
+    global options
+    global server
+    # Get game components based on input
+    from capture import readCommand
+    options = readCommand(sys.argv[1:])
+
+    # Initialise server
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
+    socket_agent_control_buffer = [
+        server.message_handler.r1_queue,
+        server.message_handler.b1_queue,
+        server.message_handler.r2_queue,
+        server.message_handler.b2_queue
+    ]
+    server.start()
+    del options['port']
+
+    socketAgentIds = options['socket_agent']
+    for index in socketAgentIds:
+        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index], index=index)
+        options['agents'][index] = agent
+    del options['socket_agent']
+
+# Stop server
+def endServer():
+    global server
+    if server != None:
+        server.join()
+
 # Start GameRunner class
 def startGameRunner():
-    global playing
     global server
     global options
-    playing = True
-    server.input_queue.push({'msg': 'gamestart'})
+    global game_runner
 
-    # game_runner = gameRunner(server=server, options=options)
-    # game_runner.start()
+    game_runner = gameRunner(server=server, options=options)
+    game_runner.start()
+
+    # Simulate typing gamestart
+    # server.input_queue.push({'msg': 'gamestart'})
+
+def runGame():
+    global server
+    global options
+    global playing
+
+    playing = True
     if 'keyboard_disabled' in options:
         del options['keyboard_disabled']
     if 'myrole' in options:
@@ -143,8 +199,10 @@ def startGameRunner():
     save_score(games[0])
 
 def endGameRunner():
-    # game_runner.join()
-    pass
+    global game_runner
+    game_runner.stopGame()
+    game_runner.join()
+    # pass
 
 
 def formatColor(r, g, b):
@@ -324,6 +382,9 @@ def rectangle(pos, rx, rw, color, filled=1, behind=0):
     coords = [(x - rw, y - rx), (x + rw, y - rx), (x + rw, y + rx), (x - rw, y + rx)]
     return polygon(coords, color, color, filled, 0, behind=behind)
 
+def entry(pos, elem):
+    x, y = pos
+    return _canvas.create_window(x, y, window=elem)
 
 def circle(pos, r, outlineColor, fillColor, endpoints=None, style='pieslice', width=2):
     x, y = pos
@@ -566,5 +627,5 @@ if __name__ == '__main__':
     ghost_shape = [(x * 10 + 20, y * 10 + 20) for x, y in ghost_shape]
     g = polygon(ghost_shape, formatColor(1, 1, 1))
     move_to(g, (50, 50))
-    circle((150, 150), 20, formatColor(0.7, 0.3, 0.0), endpoints=[15, - 15])
+    circle((150, 150), 20, formatColor(0.7, 0.3, 0.0), None, endpoints=[15, - 15])
     sleep(2)

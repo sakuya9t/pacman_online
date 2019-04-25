@@ -40,6 +40,7 @@ class socketServer(threading.Thread):
         self.conn_recycle_thread.start()
         self.input_handler.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((self.ip, self.port))
         server.listen(5)
         logger.info("Server listening on {ip}:{port}".format(ip=self.ip, port=self.port))
@@ -77,12 +78,12 @@ class socketServer(threading.Thread):
             self.sendMsg((server_ip, server_port), msg_type, msg)
 
     def join(self, timeout=None):
-        self.alive = False
         self.message_handler.join()
         for conn in self.connection_pool:
             conn.join()
         self.conn_recycle_thread.join()
-        threading.Thread.join(self, timeout)
+        self.alive = False
+        # threading.Thread.join(self, timeout)
 
 
 class connectionRecycleThread(threading.Thread):

@@ -18,10 +18,11 @@ class socketClient(threading.Thread):
         self.recv_buf = recv_buf
         self.agent_id = agent_id
         self.conn = None
+        self.alive = True
         self.connect()
 
     def run(self):
-        while True:
+        while self.alive:
             try:
                 dir = random.choice(['up', 'down', 'left', 'right'])
                 logger.info(json.dumps({"type": MESSAGE_TYPE_CONTROL_AGENT, "agent": self.agent_id, "direction": dir}))
@@ -36,7 +37,8 @@ class socketClient(threading.Thread):
         self.terminate()
 
     def join(self, timeout=None):
-        self.terminate()
+        # self.terminate()
+        self.alive = False
 
     def connect(self):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

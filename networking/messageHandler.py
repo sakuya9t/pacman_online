@@ -22,9 +22,13 @@ class messageHandler(threading.Thread):
         self.b1_queue = Queue()
         self.b2_queue = Queue()
         self.logger = logger
+        self.alive = True
+
+    def join(self, timeout=None):
+        self.alive = False
 
     def run(self):
-        while True:
+        while self.alive:
             time.sleep(0.1)
             if self.recv_buf.isEmpty():
                 continue

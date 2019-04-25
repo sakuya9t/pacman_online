@@ -15,9 +15,13 @@ class inputHandler(threading.Thread):
         keyboard.on_press(self.key_press)
         self.msgbuffer = ""
         self.enabled = enabled
+        self.alive = True
+
+    def join(self, timeout=None):
+        self.alive = False
 
     def run(self):
-        while True:
+        while self.alive:
             time.sleep(500)
 
     def key_press(self, key):

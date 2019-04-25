@@ -52,7 +52,7 @@ from game import GameStateData
 from game import Game
 from game import Actions
 # from gameController.gameRunner import gameRunner
-from networking.socketServer import socketServer, generateServerID
+# from networking.socketServer import socketServer, generateServerID
 from util import nearestPoint
 from util import manhattanDistance
 from game import Grid
@@ -1097,35 +1097,16 @@ if __name__ == '__main__':
     # server.start()
     # del options['port']
 
+    # import cProfile
+    # cProfile.run('runGames( **options )', 'profile')
+
     # Initialise ui variables
     graphicsUtils.initialize()
-
-    # Get game components based on input
-    graphicsUtils.options = readCommand(sys.argv[1:])
-
-    # Initialise server
-    graphicsUtils.server = socketServer(serverID=generateServerID(graphicsUtils.options['port']), bind_ip='0.0.0.0', port=graphicsUtils.options['port'])
-    socket_agent_control_buffer = [
-        graphicsUtils.server.message_handler.r1_queue,
-        graphicsUtils.server.message_handler.b1_queue,
-        graphicsUtils.server.message_handler.r2_queue,
-        graphicsUtils.server.message_handler.b2_queue
-    ]
-    graphicsUtils.server.start()
-    del graphicsUtils.options['port']
-
-    socketAgentIds = graphicsUtils.options['socket_agent']
-    for index in socketAgentIds:
-        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index], index=index)
-        graphicsUtils.options['agents'][index] = agent
-    del graphicsUtils.options['socket_agent']
 
     # Run ui
     graphicsUtils.run()
 
-    # Stop server and listener
-    graphicsUtils.server.join()
-    graphicsUtils.listener.join()
+    # Destroy stuff
+    graphicsUtils.destroy()
 
-    # import cProfile
-    # cProfile.run('runGames( **options )', 'profile')
+    sys.exit(0)

@@ -12,10 +12,14 @@ class connectionThread(threading.Thread):
         self.id = conn_id
         self.client_ip, self.client_port = self.connection.getpeername()
         self.logger = logger
+        self.alive = True
+
+    def join(self, timeout=None):
+        self.alive = False
 
     def run(self):
         # do something
-        while True:
+        while self.alive:
             try:
                 message = self.connection.recv(4096)
                 if not message:

@@ -2,6 +2,7 @@ import json
 import thread
 import threading
 import time
+import graphicsUtils
 
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
@@ -45,7 +46,11 @@ class gameRunner(threading.Thread):
                 # >gamestart
                 if self.started:
                     return
-                thread.start_new_thread(self.runGame, ())
+
+                # Changed to call runGame in main thread
+                graphicsUtils.runGame()
+                # thread.start_new_thread(self.runGame, ())
+
                 message = {"agent": self.role}
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
@@ -98,11 +103,14 @@ class gameRunner(threading.Thread):
         if key in list(self.options.keys()):
             del self.options[key]
 
-    def runGame(self):
-        from capture import runGames, save_score
-        games = runGames(**self.options)
+    # def runGame(self):
+    #     from capture import runGames, save_score
+    #     games = runGames(**self.options)
+    #     self.started = False
+    #     save_score(games[0])
+
+    def stopGame(self):
         self.started = False
-        save_score(games[0])
 
     def makeFakeControlMessage(self, message):
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
