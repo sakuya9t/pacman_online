@@ -10,6 +10,8 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
+MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
+
 
 
 class messageHandler(threading.Thread):
@@ -87,12 +89,28 @@ class messageHandler(threading.Thread):
                     msg_count = msg['msg_count']
                     g_seq = msg['group_sequence']
                     self.logger.info("{message}".format(message=msg))
+
                     # assume the messages from sequencer are ordered for now
                     if self.p_seq == g_seq:
                         self.deliver(agent, msg_count)
                         self.p_seq += 1
                     else:
                         pass
+
+                elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
+                    msg = msg['msg']
+                    agent = msg['agent'].upper()
+                    print msg
+                    print agent
+                    print msg['direction']
+                    if agent == 'R1':
+                        self.r1_queue.push(msg['direction'])
+                    if agent == 'B1':
+                        self.b1_queue.push(msg['direction'])
+                    if agent == 'R2':
+                        self.r2_queue.push(msg['direction'])
+                    if agent == 'B2':
+                        self.b2_queue.push(msg['direction'])
 
                 # elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                 #     msg = msg['msg']

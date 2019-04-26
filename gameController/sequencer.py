@@ -50,9 +50,7 @@ class Sequencer(threading.Thread):
                    "server_info": {"ip": self.server.ip, "port": self.server.port},
                    "msg_count": value[0],
                    "group_sequence": self.g_seq}
-
-        # TODO send real messages to other players
-        # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
         self.server.recv_queue.push(self.makeFakeControlMessage(message))
         self.g_seq += 1
 

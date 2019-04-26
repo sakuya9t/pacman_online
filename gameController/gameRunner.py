@@ -10,6 +10,7 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
+MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 
 
 class gameRunner(threading.Thread):
@@ -84,17 +85,23 @@ class gameRunner(threading.Thread):
         if not self.started:
             return
         try:
-            # message = {"agent": self.role, "direction": key,
-            #            "server_info": {"ip": self.server.ip, "port": self.server.port}}
-            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
-            # message = {"agent": self.role, "direction": key,
-            #            "server_info": {"ip": self.server.ip, "port": self.server.port},
-            #            "msg_count": self.msg_count}
-            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
-            # self.server.recv_queue.push(self.makeFakeControlMessage(message))
 
-            # TODO send real messages to other players
-            self.makeAllFakeMessage(key)
+            # only work when 4 players are connected (synchronize)
+            # message = {"agent": self.role, "direction": key,
+            #             "server_info": {"ip": self.server.ip, "port": self.server.port},
+            #             "msg_count": self.msg_count}
+            # self.server.recv_queue.push(self.makeFakeControlMessage(message))
+            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
+
+            # send direction directly (not synchronize)
+            message = {"agent": self.role, "direction": key,
+                        "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            self.server.recv_queue.push( {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL, 'msg': message})})
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
+
+            # use this for testing
+            # self.makeAllFakeMessage(key)
+
             self.msg_count += 1
         except Exception as e:
             self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
@@ -143,4 +150,8 @@ class gameRunner(threading.Thread):
         self.server.recv_queue.push(self.makeFakeControlMessage(message2))
         self.server.recv_queue.push(self.makeFakeControlMessage(message3))
         self.server.recv_queue.push(self.makeFakeControlMessage(message4))
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message1)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message2)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message3)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message4)
         print "makeAllFakeMessage"
