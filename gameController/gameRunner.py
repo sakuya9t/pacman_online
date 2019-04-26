@@ -2,12 +2,15 @@ import json
 import thread
 import threading
 import time
+from sequencer import Sequencer
 
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
+MESSAGE_TYPE_HOLDBACK = 'holdback'
+MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 
 
 class gameRunner(threading.Thread):
@@ -25,6 +28,14 @@ class gameRunner(threading.Thread):
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
+        self.msg_count = 0  # used as message id
+        # make B1 the sequencer
+        if self.server.role == "B1":
+            print "I am sequencer"
+            self.sequencer = Sequencer(server.message_handler.r1_hold_q, server.message_handler.r2_hold_q,
+                                       server.message_handler.b1_hold_q, server.message_handler.b2_hold_q,
+                                       server)
+            self.sequencer.start()
 
     def run(self):
         while self.alive:
@@ -74,10 +85,24 @@ class gameRunner(threading.Thread):
         if not self.started:
             return
         try:
+
+            # only work when 4 players are connected (synchronize)
+            # message = {"agent": self.role, "direction": key,
+            #             "server_info": {"ip": self.server.ip, "port": self.server.port},
+            #             "msg_count": self.msg_count}
+            # self.server.recv_queue.push(self.makeFakeControlMessage(message))
+            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
+
+            # send direction directly (not synchronize)
             message = {"agent": self.role, "direction": key,
-                       "server_info": {"ip": self.server.ip, "port": self.server.port}}
-            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
-            self.server.recv_queue.push(self.makeFakeControlMessage(message))
+                        "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            self.server.recv_queue.push( {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL, 'msg': message})})
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
+
+            # use this for testing
+            # self.makeAllFakeMessage(key)
+
+            self.msg_count += 1
         except Exception as e:
             self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
 
@@ -105,4 +130,28 @@ class gameRunner(threading.Thread):
         save_score(games[0])
 
     def makeFakeControlMessage(self, message):
-        return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
+        # return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
+        return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_HOLDBACK, 'msg': message})}
+
+    def makeAllFakeMessage(self, key):
+        message1 = {"agent": "R1", "direction": key,
+                    "server_info": {"ip": self.server.ip, "port": self.server.port},
+                    "msg_count": self.msg_count}
+        message2 = {"agent": "R2", "direction": key,
+                    "server_info": {"ip": self.server.ip, "port": self.server.port},
+                    "msg_count": self.msg_count}
+        message3 = {"agent": "B1", "direction": key,
+                    "server_info": {"ip": self.server.ip, "port": self.server.port},
+                    "msg_count": self.msg_count}
+        message4 = {"agent": "B2", "direction": key,
+                    "server_info": {"ip": self.server.ip, "port": self.server.port},
+                    "msg_count": self.msg_count}
+        self.server.recv_queue.push(self.makeFakeControlMessage(message1))
+        self.server.recv_queue.push(self.makeFakeControlMessage(message2))
+        self.server.recv_queue.push(self.makeFakeControlMessage(message3))
+        self.server.recv_queue.push(self.makeFakeControlMessage(message4))
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message1)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message2)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message3)
+        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message4)
+        print "makeAllFakeMessage"
