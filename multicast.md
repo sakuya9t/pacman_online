@@ -2,9 +2,9 @@
 
 In our multiplayer pacman game, it is important that every players' game screen are synchronized. If game screens are not synchronized, every players' game will be in different game state. Due to network latency, there will always be some delay to send message to other player when the local process can receive the message and update game state immediately.  For example, in the figure below, the first game screen will be the game screen of the player that controls the blue pacman and the second game screen will be the one for the player of red pacman. The blue pacman in the first game state can happily enter the red territory and head up to avoid the red ghost. However, in the second game state, the blue pacman cannot enter the red territory because the red ghost is blocking the entrance. The inconsistent game state between   players will make our multiplayer game meaningless.
 
-![unsync1](image\unsync1.png)
+![unsync1](image/unsync1.PNG)
 
-![unsync2](image\unsync2.png)
+![unsync2](image/unsync2.png)
 
 In order to solve the synchronization problem, we modified the total ordering (TO) multicast algorithm to order the control messages for each agent. The idea is to update the state of the agents in the same frequency. No one can move another step until every other agent has taken an action. 
 
