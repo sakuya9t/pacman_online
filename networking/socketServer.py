@@ -71,17 +71,33 @@ class socketServer(threading.Thread):
         self.send_queue.push(msg_packet)
 
     def sendToAllOtherPlayers(self, msg_type, msg):
-        logger.info("Send message to all other players: {msg}".format(msg=msg))
+        # logger.info("Send message to all other players: {msg}".format(msg=msg))
         for node in self.node_map:
-            server_info = node['server']
-            server_ip, server_port = server_info['ip'], server_info['port']
-            self.sendMsg((server_ip, server_port), msg_type, msg)
+            ip, port = node['ip'], node['port']
+            self.sendMsg((ip, port), msg_type, msg)
+
+    def appendNodeMap(self, ip, port, role, status):
+        self.node_map.append({'ip': ip, 'port': port, 'agent': role, 'status': status})
+
+    def updateNodeMap(self, ip, port, role, status):
+        self.removeNodeMap(ip, port)
+        self.appendNodeMap(ip, port, role, status)
+
+    def removeNodeMap(self, ip, port):
+        nodes = list(filter(
+            lambda x: (x['ip'] == ip and x['port'] == port), self.node_map))
+        for node in nodes:
+            try:
+                self.node_map.remove(node)
+            except:
+                continue
 
     def join(self, timeout=None):
         self.message_handler.join()
         for conn in self.connection_pool:
             conn.join()
         self.conn_recycle_thread.join()
+        self.logger.join()
         self.alive = False
         # threading.Thread.join(self, timeout)
 
@@ -100,7 +116,6 @@ class connectionRecycleThread(threading.Thread):
                     logger.info("Recycled thread for connection.")
                     thread.join()
                     self.pool.remove(thread)
-            time.sleep(1)
 
     def join(self, timeout=None):
         self.alive = False
