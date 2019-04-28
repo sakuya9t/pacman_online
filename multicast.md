@@ -6,7 +6,7 @@ In our multiplayer pacman game, it is important that every players' game screen 
 
 ![unsync2](image/unsync2.png)
 
-In order to solve the synchronization problem, we modified the total ordering (TO) multicast algorithm to order the control messages for each agent. The idea is to update the state of the agents in the same frequency. No one can move another step until every other agent has taken an action. 
+In order to solve the synchronization problem, we modified the total ordering (TO) multicast algorithm to order the control messages for each agent. The idea is to update the state of the agents in the same frequency. No one can move another step until every other agent has taken an action.
 
 ## Assumptions
 
@@ -25,7 +25,7 @@ On initialization: p_seq = 0, action_q = Queue(), hold_q = Queue()
 
 To TO-multicast message:
 	B-multicast(<HOLD-BACK, msg_id, msg>)
-	
+
 On B-deliver(<HOLD-BACK, msg_id, msg>):
 	hold_q.push(<msg_id, msg>)
 
@@ -55,7 +55,7 @@ There are 4 agents Red 1 (R1), Red 2 (R2), Blue 1 (B1), and Blue 2 (B2) in our g
 
 When a process want to send a control message (press the arrow keys on keyboard), the handleArrowControl() method in the gameRunner thread will be invoked. It will multicast <msg_type, msg_id, msg> to all other processes where the msg_type is MESSAGE_TYPE_HOLDBACK and the msg_id is consist of the role of this process (R1, R2, B1 or B2) and the msg_count. msg_count will be incremented by 1 every time the process sends a control message.
 
-The message handler thread of each process will handle the control message that it receives. It is initialized with 4  action queues, 4 hold-back queues, and a process sequence number. When it receives a control message with MESSAGE_TYPE_HOLDBACK, it will push the <msg_id, msg> into the hold-back queue. If the msg_type is MESSAGE_TYPE_CONTROL_AGENT, it will find the corresponding message in the hold-back queue and push the control message into action queues. Then the game state of each agent will be updated according to the group sequence number and the control message. 
+The message handler thread of each process will handle the control message that it receives. It is initialized with 4  action queues, 4 hold-back queues, and a process sequence number. When it receives a control message with MESSAGE_TYPE_HOLDBACK, it will push the <msg_id, msg> into the hold-back queue. If the msg_type is MESSAGE_TYPE_CONTROL_AGENT, it will find the corresponding message in the hold-back queue and push the control message into action queues. Then the game state of each agent will be updated according to the group sequence number and the control message.
 
 ![queues](image/queues.png)
 
@@ -74,4 +74,3 @@ The sequencer process will have an extra sequencer thread that shares the 4 hold
 
 
 ## Reference
-
