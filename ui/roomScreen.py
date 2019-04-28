@@ -39,9 +39,16 @@ class RoomScreen(Screen):
             self.backButton.click()
 
     def connectButtonFunction(self):
-        print(self.ip.get(), self.port.get())
+        ip = self.ip.get()
+        port = self.port.get()
+        connect = 'connect {} {}'.format(ip, port)
+        print(connect)
+        # Simulate typing connect ip port
+        graphicsUtils.server.input_queue.push({'msg': connect})
 
     def playButtonFunction(self):
+        # Simulate typing gamestart
+        graphicsUtils.server.input_queue.push({'msg': 'gamestart'})
         graphicsUtils.transition('Game')
 
     def backButtonFunction(self):

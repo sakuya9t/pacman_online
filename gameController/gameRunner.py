@@ -50,13 +50,13 @@ class gameRunner(threading.Thread):
                 if self.started:
                     return
 
-                # Changed to call runGame in main thread
-                graphicsUtils.runGame()
-                # thread.start_new_thread(self.runGame, ())
-
                 message = {"agent": self.role}
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
+
+                # Changed to call runGame in main thread
+                graphicsUtils.runGame()
+                # thread.start_new_thread(self.runGame, ())
 
             # >connect 127.0.0.1 8080
             elif 'connect' in msg:

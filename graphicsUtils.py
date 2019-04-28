@@ -77,15 +77,16 @@ def transition(name):
         runGame()
     elif name == 'Game':
         screen = options['display']
-        startGameRunner()
     elif name == 'Menu':
         screen = MenuScreen()
     elif name == 'Select':
         screen = SelectScreen()
+        endGameRunner()
         endServer()
     elif name == 'Room':
         screen = RoomScreen()
         startServer()
+        startGameRunner()
     elif name == 'Result':
         screen = ResultScreen()
         endGameRunner()
@@ -191,9 +192,6 @@ def startGameRunner():
 
     game_runner = gameRunner(server=server, options=options)
     game_runner.start()
-
-    # Simulate typing gamestart
-    # server.input_queue.push({'msg': 'gamestart'})
 
 def runGame():
     global server

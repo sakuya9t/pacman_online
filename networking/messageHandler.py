@@ -1,6 +1,7 @@
 import threading
 import json
 import time
+import graphicsUtils
 
 from util import Queue
 
@@ -84,6 +85,8 @@ class messageHandler(threading.Thread):
                     print msg
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
+
+                    graphicsUtils.transition('Game')
 
                 else:
                     self.logger.info(msg)
