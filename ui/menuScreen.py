@@ -37,7 +37,7 @@ class MenuScreen(Screen):
             self.quitButton.click()
 
     def startButtonFunction(self):
-        graphicsUtils.transition('Room')
+        graphicsUtils.transition('Select')
 
     def aboutButtonFunction(self):
         graphicsUtils.transition('About')

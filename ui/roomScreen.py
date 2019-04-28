@@ -19,8 +19,8 @@ class RoomScreen(Screen):
 
         # Draw menu title
         graphicsUtils.rectangle((500, 100), 32, 256, 'red', 1, 0)
-        graphicsUtils.text((500, 90), 'white', '*To be implemented* Looking for a game', 'Helvetica', 12, 'normal', None)
-        graphicsUtils.text((500, 110), 'white', 'Click "Play" for default game', 'Helvetica', 12, 'normal', None)
+        graphicsUtils.text((500, 90), 'white', 'Network game', 'Helvetica', 12, 'normal', None)
+        graphicsUtils.text((500, 110), 'white', 'Connect to another peer', 'Helvetica', 12, 'normal', None)
 
         # Draw buttons
         self.playButton.draw()
@@ -45,4 +45,4 @@ class RoomScreen(Screen):
         graphicsUtils.transition('Game')
 
     def backButtonFunction(self):
-        graphicsUtils.transition('Menu')
+        graphicsUtils.transition('Select')

@@ -27,4 +27,4 @@ class ResultScreen(Screen):
             self.backButton.click()
 
     def backButtonFunction(self):
-        graphicsUtils.transition('Menu')
+        graphicsUtils.transition('Select')

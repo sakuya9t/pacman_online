@@ -40,6 +40,7 @@ from ui.aboutScreen import AboutScreen
 from ui.menuScreen import MenuScreen
 from ui.resultScreen import ResultScreen
 from ui.roomScreen import RoomScreen
+from ui.selectScreen import SelectScreen
 from gameController.gameRunner import gameRunner
 from gameController import socketAgents
 from networking.socketServer import socketServer, generateServerID
@@ -62,17 +63,25 @@ global options
 # Whether a game is in progress
 global playing
 
+# Game runner instance
+global game_runner
+
 # Switch to another screen
 def transition(name):
     global screen
     global options
     if name == 'About':
         screen = AboutScreen()
+    elif name == 'Local':
+        screen = options['display']
+        runGame()
     elif name == 'Game':
         screen = options['display']
         startGameRunner()
     elif name == 'Menu':
         screen = MenuScreen()
+    elif name == 'Select':
+        screen = SelectScreen()
         endServer()
     elif name == 'Room':
         screen = RoomScreen()
@@ -90,6 +99,7 @@ def initialize():
     global click
     global options
     global server
+    global game_runner
 
     # Set the menu screen as the point of entry
     screen = MenuScreen()
@@ -98,7 +108,11 @@ def initialize():
     result = ''
     click = None
     server = None
-    options = None
+    game_runner = None
+
+    # Get game components based on input
+    from capture import readCommand
+    options = readCommand(sys.argv[1:])
 
 # Main loop of the UI component
 def run():
@@ -145,9 +159,6 @@ def destroy():
 def startServer():
     global options
     global server
-    # Get game components based on input
-    from capture import readCommand
-    options = readCommand(sys.argv[1:])
 
     # Initialise server
     server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
@@ -194,16 +205,19 @@ def runGame():
         del options['keyboard_disabled']
     if 'myrole' in options:
         del options['myrole']
+    if 'port' in options:
+        del options['port']
+    if 'socket_agent' in options:
+        del options['socket_agent']
     from capture import runGames, save_score
     games = runGames(**options)
     save_score(games[0])
 
 def endGameRunner():
     global game_runner
-    game_runner.stopGame()
-    game_runner.join()
-    # pass
-
+    if game_runner != None:
+        game_runner.stopGame()
+        game_runner.join()
 
 def formatColor(r, g, b):
     return '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
