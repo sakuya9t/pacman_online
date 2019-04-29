@@ -97,7 +97,7 @@ class socketServer(threading.Thread):
         for conn in self.connection_pool:
             conn.join()
         self.conn_recycle_thread.join()
-        self.logger.join()
+        self.logger.exit()
 
 
 class connectionRecycleThread(threading.Thread):

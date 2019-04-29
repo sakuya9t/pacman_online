@@ -10,6 +10,8 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_GET_READY = 'get_ready'
+STATUS_READY = 'ready'
+STATUS_NOT_READY = 'not_ready'
 
 
 class gameRunner(threading.Thread):
@@ -73,6 +75,10 @@ class gameRunner(threading.Thread):
             elif 'send' in msg:
                 args = msg.split(' ')
                 self.server.sendMsg((args[1], args[2]), MESSAGE_TYPE_NORMAL_MESSAGE, args[3])
+
+            # > get ready for the game.
+            elif 'ready' == msg:
+                self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GET_READY, {"agent": self.role})
 
             # End the game and kill all threads.
             # >exit

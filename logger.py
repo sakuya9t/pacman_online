@@ -33,8 +33,9 @@ class logger(threading.Thread):
         message = str(message)
         self.buffer.push("\033[93m (WARNING) {time} {message}".format(time=time, message=message))
 
-    def join(self, timeout=None):
+    def exit(self):
         self.alive = False
+
 
 logger = logger()
 logger.start()

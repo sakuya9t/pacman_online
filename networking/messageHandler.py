@@ -10,6 +10,8 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_GET_READY = 'get_ready'
+STATUS_READY = 'ready'
+STATUS_NOT_READY = 'not_ready'
 
 
 class messageHandler(threading.Thread):
@@ -48,7 +50,7 @@ class messageHandler(threading.Thread):
                         continue
                     my_role = self.server.role
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
-                                              role=msg['agent_id'], status='not_ready')
+                                              role=msg['agent_id'], status=STATUS_NOT_READY)
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
@@ -59,7 +61,7 @@ class messageHandler(threading.Thread):
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
-                                              role=msg['agent_id'], status='not_ready')
+                                              role=msg['agent_id'], status=STATUS_NOT_READY)
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
 
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
