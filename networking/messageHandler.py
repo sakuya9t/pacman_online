@@ -12,7 +12,8 @@ MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_GET_READY = 'get_ready'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
-
+MESSAGE_TYPE_HOLDBACK = 'holdback'
+MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 
 class messageHandler(threading.Thread):
     def __init__(self, server, recv_buf, send_buf, logger):
@@ -26,6 +27,13 @@ class messageHandler(threading.Thread):
         self.b2_queue = Queue()
         self.logger = logger
         self.alive = True
+
+        # holdback queue
+        self.r1_hold_q = Queue()
+        self.r2_hold_q = Queue()
+        self.b1_hold_q = Queue()
+        self.b2_hold_q = Queue()
+        self.p_seq = 0  # process sequence number
 
     def run(self):
         while self.alive:
@@ -64,9 +72,39 @@ class messageHandler(threading.Thread):
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
 
+                elif msg_type == MESSAGE_TYPE_HOLDBACK:
+                    msg = msg['msg']
+                    agent = msg['agent'].upper()
+                    self.logger.info("{message}".format(message=msg))
+                    if agent == 'R1':
+                        self.r1_hold_q.push((msg['msg_count'], msg['direction']))
+                    if agent == 'B1':
+                        self.b1_hold_q.push((msg['msg_count'], msg['direction']))
+                    if agent == 'R2':
+                        self.r2_hold_q.push((msg['msg_count'], msg['direction']))
+                    if agent == 'B2':
+                        self.b2_hold_q.push((msg['msg_count'], msg['direction']))
+
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']
                     agent = msg['agent'].upper()
+                    msg_count = msg['msg_count']
+                    g_seq = msg['group_sequence']
+                    self.logger.info("{message}".format(message=msg))
+
+                    # assume the messages from sequencer are ordered for now
+                    if self.p_seq == g_seq:
+                        self.deliver(agent, msg_count)
+                        self.p_seq += 1
+                    else:
+                        pass
+
+                elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
+                    msg = msg['msg']
+                    agent = msg['agent'].upper()
+                    print msg
+                    print agent
+                    print msg['direction']
                     if agent == 'R1':
                         self.r1_queue.push(msg['direction'])
                     if agent == 'B1':
@@ -75,6 +113,18 @@ class messageHandler(threading.Thread):
                         self.r2_queue.push(msg['direction'])
                     if agent == 'B2':
                         self.b2_queue.push(msg['direction'])
+
+                # elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
+                #     msg = msg['msg']
+                #     agent = msg['agent'].upper()
+                #     if agent == 'R1':
+                #         self.r1_queue.push(msg['direction'])
+                #     if agent == 'B1':
+                #         self.b1_queue.push(msg['direction'])
+                #     if agent == 'R2':
+                #         self.r2_queue.push(msg['direction'])
+                #     if agent == 'B2':
+                #         self.b2_queue.push(msg['direction'])
 
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
@@ -94,6 +144,27 @@ class messageHandler(threading.Thread):
                 print(msg)
                 self.logger.error(str(e))
 
-    def join(self, timeout=None):
+	def join(self, timeout=None):
         self.alive = False
         threading.Thread.join(self, timeout)
+        
+    def deliver(self, agent, msg_count):
+        if agent == 'R1':
+            self.deliver_msg_in_q(self.r1_queue, self.r1_hold_q, msg_count)
+        if agent == 'B1':
+            self.deliver_msg_in_q(self.b1_queue, self.b1_hold_q, msg_count)
+        if agent == 'R2':
+            self.deliver_msg_in_q(self.r2_queue, self.r2_hold_q, msg_count)
+        if agent == 'B2':
+            self.deliver_msg_in_q(self.b2_queue, self.b2_hold_q, msg_count)
+
+    def deliver_msg_in_q(self, q, hold_q, msg_count):
+        id, key = hold_q.pop()
+        # delete garbage msg
+        while id != msg_count:
+            id, key = hold_q.pop()
+        # deliver msg
+        if id == msg_count:
+            q.push(key)
+        else:
+            self.logger.error("messageHandler error: message not in queue")
