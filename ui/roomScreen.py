@@ -9,10 +9,12 @@ class RoomScreen(Screen):
     def __init__(self):
         self.name = 'Room'
         self.connectButton = Button(700, 200, 'Connect', 'blue', 'None', self.connectButtonFunction)
+        self.waitButton = Button(500, 200, 'Waiting', 'orange', 'None', self.waitButtonFunction)
         self.playButton = Button(500, 300, 'Play', 'green', 'Play', self.playButtonFunction)
         self.backButton = Button(500, 400, 'Back', 'orange', 'Menu', self.backButtonFunction)
-        self.ip = Input(300, 200, '127.0.0.1')
-        self.port = Input(450, 200, '8080')
+        if graphicsUtils.host:
+            self.ipInput = Input(300, 200, '127.0.0.1')
+            self.portInput = Input(450, 200, '8080')
 
     def draw(self):
         graphicsUtils.clear_screen()
@@ -23,28 +25,44 @@ class RoomScreen(Screen):
         graphicsUtils.text((500, 110), 'white', 'Connect to another peer', 'Helvetica', 12, 'normal', None)
 
         # Draw buttons
-        self.playButton.draw()
-        self.backButton.draw()
-        self.connectButton.draw()
+        if graphicsUtils.host:
+            if graphicsUtils.connected and self.connectButton.text != 'Connected':
+                self.connectButton.text = 'Connected'
+                self.connectButton.color = 'Green'
+            self.connectButton.draw()
+            self.ipInput.draw()
+            self.portInput.draw()
+        else:
+            if graphicsUtils.connected and self.waitButton.text != 'Connected':
+                self.waitButton.text = 'Connected'
+                self.waitButton.color = 'Green'
+            self.waitButton.draw()
 
-        self.ip.draw()
-        self.port.draw()
+        if graphicsUtils.connected:
+            self.playButton.draw()
+        self.backButton.draw()
 
     def listen(self, pos, type):
-        if self.connectButton.contains(pos[0], pos[1]):
-            self.connectButton.click()
+        if graphicsUtils.host:
+            if self.connectButton.contains(pos[0], pos[1]):
+                self.connectButton.click()
+        else:
+            if self.waitButton.contains(pos[0], pos[1]):
+                self.waitButton.click()
         if self.playButton.contains(pos[0], pos[1]):
             self.playButton.click()
         if self.backButton.contains(pos[0], pos[1]):
             self.backButton.click()
 
     def connectButtonFunction(self):
-        ip = self.ip.get()
-        port = self.port.get()
+        ip = self.ipInput.get()
+        port = self.portInput.get()
         connect = 'connect {} {}'.format(ip, port)
-        print(connect)
         # Simulate typing connect ip port
         graphicsUtils.server.input_queue.push({'msg': connect})
+
+    def waitButtonFunction(self):
+        pass
 
     def playButtonFunction(self):
         # Simulate typing gamestart

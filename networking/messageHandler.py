@@ -54,6 +54,7 @@ class messageHandler(threading.Thread):
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
                                         msg={'agent_id': my_role})
+                    graphicsUtils.connected = True
 
                 elif msg_type == MESSAGE_TYPE_CONNECT_CONFIRM:
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
@@ -62,6 +63,7 @@ class messageHandler(threading.Thread):
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
                                               role=msg['agent_id'], status='not_ready')
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
+                    graphicsUtils.connected = True
 
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']

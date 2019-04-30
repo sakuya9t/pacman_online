@@ -66,6 +66,10 @@ global playing
 # Game runner instance
 global game_runner
 
+# Whether the current player is hosting the game or not
+global host
+global connected
+
 # Switch to another screen
 def transition(name):
     global screen
@@ -74,19 +78,19 @@ def transition(name):
         screen = AboutScreen()
     elif name == 'Local':
         screen = options['display']
-        runGame()
+        runLocalGame()
     elif name == 'Game':
         screen = options['display']
     elif name == 'Menu':
         screen = MenuScreen()
     elif name == 'Select':
-        screen = SelectScreen()
         endGameRunner()
         endServer()
+        screen = SelectScreen()
     elif name == 'Room':
-        screen = RoomScreen()
         startServer()
         startGameRunner()
+        screen = RoomScreen()
     elif name == 'Result':
         screen = ResultScreen()
         endGameRunner()
@@ -101,6 +105,8 @@ def initialize():
     global options
     global server
     global game_runner
+    global host
+    global connected
 
     # Set the menu screen as the point of entry
     screen = MenuScreen()
@@ -110,6 +116,8 @@ def initialize():
     click = None
     server = None
     game_runner = None
+    host = False
+    connected = False
 
     # Get game components based on input
     from capture import readCommand
@@ -146,6 +154,8 @@ def destroy():
     global options
     global server
     global game_runner
+    global host
+    global connected
 
     screen = None
     exit = True
@@ -155,6 +165,8 @@ def destroy():
     server = None
     options = None
     game_runner = None
+    host = False
+    connected = False
 
 # Start server and options
 def startServer():
@@ -193,7 +205,7 @@ def startGameRunner():
     game_runner = gameRunner(server=server, options=options)
     game_runner.start()
 
-def runGame():
+def runLocalGame():
     global server
     global options
     global playing
@@ -207,6 +219,18 @@ def runGame():
         del options['port']
     if 'socket_agent' in options:
         del options['socket_agent']
+    from capture import runGames, save_score
+    games = runGames(**options)
+    save_score(games[0])
+
+def runNetworkGame(s, o):
+    global server
+    global options
+    global playing
+
+    server = s
+    options = o
+    playing = True
     from capture import runGames, save_score
     games = runGames(**options)
     save_score(games[0])

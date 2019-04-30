@@ -55,7 +55,7 @@ class gameRunner(threading.Thread):
                 self.started = True
 
                 # Changed to call runGame in main thread
-                graphicsUtils.runGame()
+                graphicsUtils.runNetworkGame(self.server, self.options)
                 # thread.start_new_thread(self.runGame, ())
 
             # >connect 127.0.0.1 8080
