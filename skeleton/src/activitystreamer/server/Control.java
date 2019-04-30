@@ -16,10 +16,12 @@ public class Control extends Thread {
 	private static Listener listener;
 	protected static Control control = null;
 	private static Map<String, Integer> peer_list;
+	private static Map<Integer, String> msg_buff;
+	private static ArrayList<String> queue;
 
 	// server tags
 	private static boolean isRoot = true;
-	private static String server_id = "";
+	private static String server_id = ""; // server_id:server_port
 
 	public static Control getInstance() {
 		if(control==null){
@@ -29,12 +31,14 @@ public class Control extends Thread {
 	}
 	
 	public Control() {
+		// init the queue
+		queue = new ArrayList<>();
 		// initialize the connections array
-		connections = new ArrayList<Connection>();
+		connections = new ArrayList<>();
 		// initialize peer_list
 		peer_list = new HashMap<>();
 		//initialize dead_list
-		dead_list = new ArrayList<String>();
+		dead_list = new ArrayList<>();
 		// update self server ID as socket addr
 		this.server_id = Settings.getLocalHostname() + ":" + Settings.getLocalPort();
 		// start a listener
@@ -64,8 +68,6 @@ public class Control extends Thread {
 		}
 	}
 
-
-	
 	/*
 	 * Processing incoming messages from the connection.
 	 * Return true if the connection should close.
@@ -73,50 +75,87 @@ public class Control extends Thread {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public synchronized boolean process(Connection c,String m){
-		MSG rm = new MSG(m);
-		System.out.println(rm.toSendString());
-		if (rm.getType().equals(Settings.INITIAL_OUT)){
-			String remote_peer_id = rm.getBody();
+	public synchronized boolean process(Connection c_in,String m_in){
+		MSG msg_recv = new MSG(m_in);
+//		System.out.println(msg_recv.toSendString());
+		if (msg_recv.getType().equals(Settings.INITIAL_OUT)){
+			// other server init a connection to this server
+			String remote_peer_id = msg_recv.getBody();
 			// write id to connection id
-			c.setConnId(remote_peer_id);
+			c_in.setConnId(remote_peer_id);
 			// write entry to local peer list
 			peer_list.put(remote_peer_id, 0);
 			// reply with INITIAL_IN
-			MSG m_ii = new MSG(Settings.INITIAL_IN, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), this.server_id);
-			c.sendMsg(m_ii.toSendString());
+			MSG m_ii = new MSG(Settings.INITIAL_IN, c_in.getSrcHost(), c_in.getSrcPort(), c_in.getDestHost(), c_in.getDestPort(), this.server_id);
+			c_in.sendMsg(m_ii.toSendString());
 			return false;
 		}
 		else
-		if (rm.getType().equals(Settings.INITIAL_IN)){
-			String remote_peer_id = rm.getBody();
+		if (msg_recv.getType().equals(Settings.INITIAL_IN)){
+			// this server init a connection to other server and get reply
+			String remote_peer_id = msg_recv.getBody();
 			// write id to connection id
-			c.setConnId(remote_peer_id);
+			c_in.setConnId(remote_peer_id);
 			// write entry to local peer list
 			peer_list.put(remote_peer_id, 0);
 			return false;
 		}
 		else
-		if (rm.getType().equals(Settings.HEART_BEAT)){
+		if (msg_recv.getType().equals(Settings.HEART_BEAT)){
+			//continuously received heart_beat confirmation from other server--> necessary for error detection
 			// clear local entry's counter
-			String ent = rm.getBody();
+			String ent = msg_recv.getBody();
 			peer_list.put(ent, 0);
 			// forwarding current HB to other peers except the origin
 			for(Connection conn : this.getConnections()){
-				if (!c.isEqual(conn)) {
+				if (!conn.isEqual(c_in)) {
 					// not send back
-					MSG m_hb = new MSG(Settings.HEART_BEAT, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), ent);
+					MSG m_hb = new MSG(Settings.HEART_BEAT, conn.getSrcHost(), conn.getSrcPort(), conn.getDestHost(), conn.getDestPort(), ent);
 					conn.sendMsg(m_hb.toSendString());
 				}
 			}
 			return false;
 		}
 		else
-		if (rm.getType().equals(Settings.CLIENT_OUT)) {
-			MSG m_ci = new MSG(Settings.CLIENT_IN, c.getSrcHost(), c.getSrcPort(), c.getDestHost(), c.getDestPort(), rm.getBody());
-			c.sendMsg(m_ci.toSendString());
+		if (msg_recv.getType().equals(Settings.CLIENT_INIT)){
+			// set connection id
+			c_in.setConnId(msg_recv.getBody());
+			// incomming client connection, reply with CLIENT_ACC
+			MSG m_ca = new MSG(Settings.CLIENT_ACC, c_in.getSrcHost(), c_in.getSrcPort(), c_in.getDestHost(), c_in.getDestPort(), this.server_id);
+			c_in.sendMsg(m_ca.toSendString());
 			return false;
 		}
+		else
+		if (msg_recv.getType().equals(Settings.CLIENT_MSG) || msg_recv.getType().equals(Settings.CLIENT_OUT)) {
+			// A server connects to this server and sends a msg
+			// put received msg to queue
+			this.queue.add(msg_recv.getBody());
+			// print out local queue
+			if (this.queue.size() != 0) {
+				for (String item : this.queue) {
+					System.out.println(item);
+				}
+				System.out.println();
+			}
+			// forwarding CLIENT_OUT/CLIENT_MSG msg to other servers or clients, except for the origin
+			for(Connection conn : this.getConnections()){
+				// broadcast exclude the origin
+				if (!conn.isEqual(c_in)){
+					if (this.peer_list.containsKey(conn.getConnId())) {
+						// forwarding to servers
+						MSG m_cm = new MSG(Settings.CLIENT_MSG, conn.getSrcHost(), conn.getSrcPort(), conn.getDestHost(), conn.getDestPort(), msg_recv.getBody());
+						conn.sendMsg(m_cm.toSendString());
+					}
+					else{
+						// forwarding to connected clients
+						MSG m_ci = new MSG(Settings.CLIENT_IN, conn.getSrcHost(), conn.getSrcPort(), conn.getDestHost(), conn.getDestPort(), msg_recv.getBody());
+						conn.sendMsg(m_ci.toSendString());
+					}
+				}
+			}
+			return false;
+		}
+
 			// otherwise, close the connection
 		return true;
 	}
@@ -159,7 +198,8 @@ public class Control extends Thread {
 			// do something with 5 second intervals in between
 			try {
 				Thread.sleep(Settings.getActivityInterval());
-			} catch (InterruptedException e) {
+			}
+			catch (InterruptedException e) {
 				break;
 			}
 			if(!term){
@@ -205,6 +245,7 @@ public class Control extends Thread {
 			System.out.println("Dead Peer ID = " + dp);
 		}
 //		System.out.println();
+
 		return false;
 	}
 	

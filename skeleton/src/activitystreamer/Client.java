@@ -17,10 +17,10 @@ public class Client {
 	private static final Logger log = LogManager.getLogger();
 	
 	private static void help(Options options){
-		String header = "An ActivityStream Client for Unimelb COMP90015\n\n";
+		String header = "An ActivityStream ClientConnection for Unimelb COMP90015\n\n";
 		String footer = "\ncontact aharwood@unimelb.edu.au for issues.";
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("ActivityStreamer.Client", header, options, footer, true);
+		formatter.printHelp("ActivityStreamer.ClientConnection", header, options, footer, true);
 		System.exit(-1);
 	}
 	

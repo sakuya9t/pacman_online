@@ -18,9 +18,15 @@ public class Settings {
 
 	// final values
 	public final static int DEAD_THRES = 5;
+	public final static String CLIENT_CONN = "CLIENT_CONN";
+	public final static String SERVER_CONN = "SERVER_CONN";
+
 	public final static String HEART_BEAT = "HEART_BEAT";
 	public final static String INITIAL_OUT = "INITIAL_OUT";
 	public final static String INITIAL_IN = "INITIAL_IN";
+	public final static String CLIENT_INIT = "CLIENT_INIT";
+	public final static String CLIENT_ACC = "CLIENT_ACC";
+	public final static String CLIENT_MSG = "CLIENT_MSG";
 	public final static String CLIENT_OUT = "CLIENT_OUT";
 	public final static String CLIENT_IN = "CLIENT_IN";
 
