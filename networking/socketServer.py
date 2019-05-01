@@ -75,12 +75,13 @@ class socketServer(threading.Thread):
             ip, port = node['ip'], node['port']
             self.sendMsg((ip, port), msg_type, msg)
 
-    def appendNodeMap(self, ip, port, role, status):
-        self.node_map.append({'ip': ip, 'port': port, 'agent': role, 'status': status})
+    def appendNodeMap(self, ip, port, server_ip, server_port, role, status):
+        self.node_map.append({'ip': ip, 'port': port, 'server_ip': server_ip,
+                              'server_port': server_port, 'agent': role, 'status': status})
 
-    def updateNodeMap(self, ip, port, role, status):
+    def updateNodeMap(self, ip, port, server_ip, server_port, role, status):
         self.removeNodeMap(ip, port)
-        self.appendNodeMap(ip, port, role, status)
+        self.appendNodeMap(ip, port, server_ip, server_port, role, status)
 
     def removeNodeMap(self, ip, port):
         nodes = list(filter(
@@ -151,6 +152,6 @@ def generateServerID(port_num):
 if __name__ == '__main__':
     from networking.inputHandler import inputHandler
     server = socketServer(0, "0.0.0.0", 8080)
-    input_handler = inputHandler(server)
+    input_handler = inputHandler(server, False)
     server.start()
     input_handler.start()

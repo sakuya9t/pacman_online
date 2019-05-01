@@ -10,10 +10,11 @@ MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_GET_READY = 'get_ready'
-STATUS_READY = 'ready'
-STATUS_NOT_READY = 'not_ready'
+MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
+STATUS_READY = 'ready'
+STATUS_NOT_READY = 'not_ready'
 
 class messageHandler(threading.Thread):
     def __init__(self, server, recv_buf, send_buf, logger):
@@ -47,30 +48,57 @@ class messageHandler(threading.Thread):
                 msg = json.loads(msg['message'])
                 msg_type = msg['type']
                 node_map = self.server.node_map
+                my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
 
                 if msg_type == MESSAGE_TYPE_CONNECT_TO_SERVER:
                     self.logger.info("Received connection request from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
+
                     # connect to source_ip:source_port
                     msg = msg['msg']
+
                     # if there is already a player claiming he is R1, don't let another R1 get online.
                     if len(list(filter(lambda x: x['agent'].__eq__(msg['agent_id']), node_map))):
                         continue
-                    my_role = self.server.role
+
+                    # if there are already other nodes existing, send their server address to new node.
+                    existing_server_list = []
+                    for node in node_map:
+                        existing_server_list.append({'server_ip': node['server_ip'],
+                                                     'server_port': node['server_port']})
+                    self.server.sendMsg(addr=(source_ip, source_port),
+                                        msg_type=MESSAGE_TYPE_EXISTING_NODES,
+                                        msg=existing_server_list)
+
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                              server_ip=msg['server_ip'], server_port=msg['server_port'],
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
-                                        msg={'agent_id': my_role})
+                                        msg={'server_ip': my_serverip, 'server_port': my_serverport,
+                                             'agent_id': my_role})
 
                 elif msg_type == MESSAGE_TYPE_CONNECT_CONFIRM:
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                              server_ip=msg['server_ip'], server_port=msg['server_port'],
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
                     self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
+
+                elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
+                    # Some nodes are already existed, I get this message because I am connecting to one of them.
+                    # Then I am required to connect to all the rest ones.
+                    # Used for when 3rd or 4th node joins in.
+                    # Todo: test this method.
+                    server_list = msg['msg']
+                    self.logger.info("Received a request to connect to the following servers: {servers}"
+                                     .format(servers=server_list))
+                    for server in server_list:
+                        ip, port = server['server_ip'], server['server_port']
+                        self.connect(ip, port)
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']
@@ -165,3 +193,10 @@ class messageHandler(threading.Thread):
             q.push(key)
         else:
             self.logger.error("messageHandler error: message not in queue")
+
+    def connect(self, ip, port):
+        self.server.activeConnect(ip, port)
+        # First send a message to tell the target server our server info
+        my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
+        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
+                            {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})

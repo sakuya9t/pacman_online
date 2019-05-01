@@ -13,6 +13,7 @@ MESSAGE_TYPE_START_GAME = 'start_game'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
+MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 SEQUENCER = "B1"
@@ -132,7 +133,9 @@ class gameRunner(threading.Thread):
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
         # First send a message to tell the target server our server info
-        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER, {'agent_id': self.role})
+        my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.role
+        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
+                            {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})
 
     def join(self, timeout=None):
         self.alive = False
