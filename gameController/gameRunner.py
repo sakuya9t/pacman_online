@@ -48,7 +48,7 @@ class gameRunner(threading.Thread):
             if self.control_queue.isEmpty():
                 continue
             msg = self.control_queue.pop()
-            # self.logger.info("Keyboard input: {msg}".format(msg=msg))
+            self.logger.info("Keyboard input: {msg}".format(msg=msg))
             if 'msg' in msg.keys():
                 self.handleMessage(msg['msg'])
             elif 'key' in msg.keys():
@@ -96,6 +96,8 @@ class gameRunner(threading.Thread):
             # >exit
             elif 'exit' == msg:
                 self.server.join()
+                if self.sequencer:
+                    self.sequencer.exit()
                 self.alive = False
         except Exception as e:
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
@@ -114,8 +116,10 @@ class gameRunner(threading.Thread):
 
             # send direction directly (not synchronize)
             message = {"agent": self.role, "direction": key,
-                        "server_info": {"ip": self.server.ip, "port": self.server.port}}
-            self.server.recv_queue.push( {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL, 'msg': message})})
+                       "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            self.server.recv_queue.push({'ip': 'me', 'port': 'me',
+                                        'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL,
+                                                               'msg': message})})
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
 
             # use this for testing
@@ -150,6 +154,7 @@ class gameRunner(threading.Thread):
         # return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_HOLDBACK, 'msg': message})}
 
+    # test usage only
     def makeAllFakeMessage(self, key):
         message1 = {"agent": "R1", "direction": key,
                     "server_info": {"ip": self.server.ip, "port": self.server.port},

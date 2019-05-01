@@ -102,9 +102,6 @@ class messageHandler(threading.Thread):
                 elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
                     msg = msg['msg']
                     agent = msg['agent'].upper()
-                    print msg
-                    print agent
-                    print msg['direction']
                     if agent == 'R1':
                         self.r1_queue.push(msg['direction'])
                     if agent == 'B1':
@@ -144,7 +141,7 @@ class messageHandler(threading.Thread):
                 print(msg)
                 self.logger.error(str(e))
 
-	def join(self, timeout=None):
+    def join(self, timeout=None):
         self.alive = False
         threading.Thread.join(self, timeout)
         

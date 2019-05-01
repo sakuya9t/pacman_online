@@ -20,9 +20,11 @@ class Sequencer(threading.Thread):
         self.pre_b1_tail = ""
         self.pre_b2_tail = ""
 
-    def run(self):
-        while True:
+        self.alive = True
 
+    def run(self):
+        while self.alive:
+            time.sleep(0.001)
             # try to get the tail of the holdback queue
             try:
                 r1_tail = self.r1_hold_q.list[-1]    # a tuple (msg_count, key)
@@ -56,3 +58,6 @@ class Sequencer(threading.Thread):
 
     def makeFakeControlMessage(self, message):
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
+
+    def exit(self):
+        self.alive = False
