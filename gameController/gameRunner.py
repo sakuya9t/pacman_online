@@ -15,6 +15,7 @@ MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
+SEQUENCER = "B1"
 
 
 class gameRunner(threading.Thread):
@@ -34,7 +35,7 @@ class gameRunner(threading.Thread):
         self.delOption('myrole')
         self.msg_count = 0  # used as message id
         # make B1 the sequencer
-        if self.server.role == "B1":
+        if self.server.role == SEQUENCER:
             print "I am sequencer"
             self.sequencer = Sequencer(server.message_handler.r1_hold_q, server.message_handler.r2_hold_q,
                                        server.message_handler.b1_hold_q, server.message_handler.b2_hold_q,
