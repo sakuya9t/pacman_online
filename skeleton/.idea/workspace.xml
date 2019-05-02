@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3bde6032-2b57-4d96-865b-2d648b88855f" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/Client.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/Client.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/client/Client.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/client/SimpleClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/client/SimpleClient.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/server/Connection.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/server/Connection.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/server/Control.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/server/Control.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/util/Settings.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/skeleton/activitystreamer/util/Settings.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/activitystreamer/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/activitystreamer/client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/client/ClientConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/activitystreamer/client/SimpleClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/client/SimpleClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/activitystreamer/server/Connection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/server/Connection.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/activitystreamer/server/Control.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/server/Control.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/activitystreamer/util/Settings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/activitystreamer/util/Settings.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -35,6 +23,29 @@
               <caret line="31" column="41" selection-start-line="31" selection-start-column="37" selection-end-line="31" selection-end-column="41" />
               <folding>
                 <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/activitystreamer/msg/MSG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="418">
+              <caret line="22" selection-start-line="22" selection-end-line="22" />
+              <folding>
+                <element signature="e#1032#1033#0" expanded="true" />
+                <element signature="e#1063#1064#0" expanded="true" />
+                <element signature="e#1046#1047#0" expanded="true" />
+                <element signature="e#1081#1082#0" expanded="true" />
+                <element signature="e#1112#1113#0" expanded="true" />
+                <element signature="e#1147#1148#0" expanded="true" />
+                <element signature="e#1182#1183#0" expanded="true" />
+                <element signature="e#1219#1220#0" expanded="true" />
+                <element signature="e#1250#1251#0" expanded="true" />
+                <element signature="e#1286#1287#0" expanded="true" />
+                <element signature="e#1313#1314#0" expanded="true" />
+                <element signature="e#1339#1340#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -70,41 +81,18 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/activitystreamer/msg/MSG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="22" selection-start-line="22" selection-end-line="22" />
-              <folding>
-                <element signature="e#1032#1033#0" expanded="true" />
-                <element signature="e#1063#1064#0" expanded="true" />
-                <element signature="e#1046#1047#0" expanded="true" />
-                <element signature="e#1081#1082#0" expanded="true" />
-                <element signature="e#1112#1113#0" expanded="true" />
-                <element signature="e#1147#1148#0" expanded="true" />
-                <element signature="e#1182#1183#0" expanded="true" />
-                <element signature="e#1219#1220#0" expanded="true" />
-                <element signature="e#1250#1251#0" expanded="true" />
-                <element signature="e#1286#1287#0" expanded="true" />
-                <element signature="e#1313#1314#0" expanded="true" />
-                <element signature="e#1339#1340#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/activitystreamer/server/Control.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="19">
-              <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
+            <state relative-caret-position="411">
+              <caret line="154" column="161" lean-forward="true" selection-start-line="154" selection-start-column="161" selection-end-line="154" selection-end-column="161" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#5309#5310#0" expanded="true" />
                 <element signature="e#5349#5350#0" expanded="true" />
                 <element signature="e#8428#8429#0" expanded="true" />
                 <element signature="e#8441#8442#0" expanded="true" />
-                <element signature="e#8531#8532#0" expanded="true" />
+                <element signature="e#8719#8720#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -172,7 +160,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/activitystreamer/client/ClientControl.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="912">
@@ -187,8 +175,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/activitystreamer/client/ClientConnection.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1311">
-              <caret line="69" column="40" selection-start-line="69" selection-start-column="40" selection-end-line="69" selection-end-column="40" />
+            <state relative-caret-position="1026">
+              <caret line="54" column="107" selection-start-line="54" selection-start-column="96" selection-end-line="54" selection-end-column="107" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#2317#2318#0" expanded="true" />
@@ -236,8 +224,8 @@
         <option value="$PROJECT_DIR$/src/activitystreamer/msg/MSG.java" />
         <option value="$PROJECT_DIR$/src/activitystreamer/util/Settings.java" />
         <option value="$PROJECT_DIR$/src/activitystreamer/client/ClientConnection.java" />
-        <option value="$PROJECT_DIR$/src/activitystreamer/server/Control.java" />
         <option value="$PROJECT_DIR$/src/activitystreamer/client/ClientControl.java" />
+        <option value="$PROJECT_DIR$/src/activitystreamer/server/Control.java" />
       </list>
     </option>
   </component>
@@ -303,7 +291,7 @@
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors" />
   </component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
@@ -385,15 +373,15 @@
       <option name="presentableId" value="Default" />
       <updated>1556110002591</updated>
       <workItem from="1556110005403" duration="1279000" />
-      <workItem from="1556156234652" duration="36936000" />
+      <workItem from="1556156234652" duration="38974000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="38215000" />
+    <option name="totallyTimeSpent" value="40253000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1456" height="2536" extended-state="7" />
+    <frame x="-8" y="-8" width="2576" height="1416" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.17191978" />
@@ -557,27 +545,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/activitystreamer/msg/MSG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="22" selection-start-line="22" selection-end-line="22" />
-          <folding>
-            <element signature="e#1032#1033#0" expanded="true" />
-            <element signature="e#1063#1064#0" expanded="true" />
-            <element signature="e#1046#1047#0" expanded="true" />
-            <element signature="e#1081#1082#0" expanded="true" />
-            <element signature="e#1112#1113#0" expanded="true" />
-            <element signature="e#1147#1148#0" expanded="true" />
-            <element signature="e#1182#1183#0" expanded="true" />
-            <element signature="e#1219#1220#0" expanded="true" />
-            <element signature="e#1250#1251#0" expanded="true" />
-            <element signature="e#1286#1287#0" expanded="true" />
-            <element signature="e#1313#1314#0" expanded="true" />
-            <element signature="e#1339#1340#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/activitystreamer/client/SimpleClient.java">
       <provider selected="true" editor-type-id="text-editor">
         <state>
@@ -595,21 +562,6 @@
           <caret line="33" column="37" selection-start-line="33" selection-start-column="37" selection-end-line="33" selection-end-column="37" />
           <folding>
             <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/activitystreamer/server/Control.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#5309#5310#0" expanded="true" />
-            <element signature="e#5349#5350#0" expanded="true" />
-            <element signature="e#8428#8429#0" expanded="true" />
-            <element signature="e#8441#8442#0" expanded="true" />
-            <element signature="e#8531#8532#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -642,14 +594,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/activitystreamer/client/ClientConnection.java">
+    <entry file="file://$PROJECT_DIR$/src/activitystreamer/msg/MSG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1311">
-          <caret line="69" column="40" selection-start-line="69" selection-start-column="40" selection-end-line="69" selection-end-column="40" />
+        <state relative-caret-position="418">
+          <caret line="22" selection-start-line="22" selection-end-line="22" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#2317#2318#0" expanded="true" />
-            <element signature="e#2354#2355#0" expanded="true" />
+            <element signature="e#1032#1033#0" expanded="true" />
+            <element signature="e#1063#1064#0" expanded="true" />
+            <element signature="e#1046#1047#0" expanded="true" />
+            <element signature="e#1081#1082#0" expanded="true" />
+            <element signature="e#1112#1113#0" expanded="true" />
+            <element signature="e#1147#1148#0" expanded="true" />
+            <element signature="e#1182#1183#0" expanded="true" />
+            <element signature="e#1219#1220#0" expanded="true" />
+            <element signature="e#1250#1251#0" expanded="true" />
+            <element signature="e#1286#1287#0" expanded="true" />
+            <element signature="e#1313#1314#0" expanded="true" />
+            <element signature="e#1339#1340#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -660,6 +621,33 @@
           <caret line="48" lean-forward="true" selection-start-line="48" selection-end-line="48" />
           <folding>
             <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/activitystreamer/client/ClientConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1026">
+          <caret line="54" column="107" selection-start-line="54" selection-start-column="96" selection-end-line="54" selection-end-column="107" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2317#2318#0" expanded="true" />
+            <element signature="e#2354#2355#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/activitystreamer/server/Control.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="411">
+          <caret line="154" column="161" lean-forward="true" selection-start-line="154" selection-start-column="161" selection-end-line="154" selection-end-column="161" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#5309#5310#0" expanded="true" />
+            <element signature="e#5349#5350#0" expanded="true" />
+            <element signature="e#8428#8429#0" expanded="true" />
+            <element signature="e#8441#8442#0" expanded="true" />
+            <element signature="e#8719#8720#0" expanded="true" />
           </folding>
         </state>
       </provider>

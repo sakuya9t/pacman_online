@@ -16,7 +16,7 @@ public class Control extends Thread {
 	private static Listener listener;
 	protected static Control control = null;
 	private static Map<String, Integer> peer_list;
-	private static Map<Integer, String> msg_buff;
+	private static Map<String, Integer> client_list;
 	private static ArrayList<String> queue;
 
 	// server tags
@@ -37,6 +37,8 @@ public class Control extends Thread {
 		connections = new ArrayList<>();
 		// initialize peer_list
 		peer_list = new HashMap<>();
+		// initialize client_list
+		client_list = new HashMap<>();
 		//initialize dead_list
 		dead_list = new ArrayList<>();
 		// update self server ID as socket addr
@@ -120,6 +122,8 @@ public class Control extends Thread {
 		if (msg_recv.getType().equals(Settings.CLIENT_INIT)){
 			// set connection id
 			c_in.setConnId(msg_recv.getBody());
+			// add new client_id to client_list, new connection-->msg_sent counter = 0
+			this.client_list.put(c_in.getConnId(), 0);
 			// incomming client connection, reply with CLIENT_ACC
 			MSG m_ca = new MSG(Settings.CLIENT_ACC, c_in.getSrcHost(), c_in.getSrcPort(), c_in.getDestHost(), c_in.getDestPort(), this.server_id);
 			c_in.sendMsg(m_ca.toSendString());
