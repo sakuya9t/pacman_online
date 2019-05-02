@@ -849,8 +849,9 @@ def readCommand(argv):
                       help=default('How many episodes are training (suppresses output)'), default=0)
     parser.add_option('-c', '--catchExceptions', action='store_true', default=False,
                       help='Catch exceptions and enforce time limits')
+    parser.add_option('--ip', dest='ip', help=default('Ip address for server'), default='0.0.0.0')
     parser.add_option('--port', dest='port', type='int',
-                      help=default('Port number of game receiver'), default=8080)
+                      help=default('Port number of game receiver'), default=8000)
     parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
                       help='Disable the keyboard so that we can test only one input.', default=False)
 
@@ -952,6 +953,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['ip'] = options.ip
     args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
@@ -1088,10 +1090,11 @@ if __name__ == '__main__':
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'])
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
+    del options['ip']
     del options['port']
 
     socketAgentIds = options['socket_agent']
