@@ -4,6 +4,7 @@ import time
 import json
 
 from logger import logger
+from nodeMap import nodeMap
 from connectionThread import connectionThread
 from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
@@ -21,7 +22,7 @@ class socketServer(threading.Thread):
         self.ip = bind_ip
         self.port = port
         self.connection_pool = []
-        self.node_map = []
+        self.node_map = nodeMap()
         self.send_queue = Queue()
         self.send_queue_thread = messageSendingQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
@@ -76,21 +77,13 @@ class socketServer(threading.Thread):
             self.sendMsg((ip, port), msg_type, msg)
 
     def appendNodeMap(self, ip, port, server_ip, server_port, role, status):
-        self.node_map.append({'ip': ip, 'port': port, 'server_ip': server_ip,
-                              'server_port': server_port, 'agent': role, 'status': status})
+        self.node_map.append(ip, port, server_ip, server_port, role, status)
 
     def updateNodeMap(self, ip, port, server_ip, server_port, role, status):
-        self.removeNodeMap(ip, port)
-        self.appendNodeMap(ip, port, server_ip, server_port, role, status)
+        self.node_map.update(ip, port, server_ip, server_port, role, status)
 
     def removeNodeMap(self, ip, port):
-        nodes = list(filter(
-            lambda x: (x['ip'] == ip and x['port'] == port), self.node_map))
-        for node in nodes:
-            try:
-                self.node_map.remove(node)
-            except:
-                continue
+        self.node_map.remove(ip, port)
 
     def join(self, timeout=None):
         self.alive = False

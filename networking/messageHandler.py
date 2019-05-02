@@ -58,14 +58,14 @@ class messageHandler(threading.Thread):
                     msg = msg['msg']
 
                     # if there is already a player claiming he is R1, don't let another R1 get online.
-                    if len(list(filter(lambda x: x['agent'].__eq__(msg['agent_id']), node_map))):
+                    if node_map.exists_agent(msg['agent_id']):
+                        self.logger.info("Player {role} already exists, rejected connection."
+                                         .format(role=msg['agent_id']))
+                        # todo: disconnect with corresponding node.
                         continue
 
                     # if there are already other nodes existing, send their server address to new node.
-                    existing_server_list = []
-                    for node in node_map:
-                        existing_server_list.append({'server_ip': node['server_ip'],
-                                                     'server_port': node['server_port']})
+                    existing_server_list = node_map.get_all_servers()
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_EXISTING_NODES,
                                         msg=existing_server_list)
@@ -73,7 +73,7 @@ class messageHandler(threading.Thread):
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
                                               server_ip=msg['server_ip'], server_port=msg['server_port'],
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
-                    self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
                                         msg={'server_ip': my_serverip, 'server_port': my_serverport,
@@ -86,7 +86,7 @@ class messageHandler(threading.Thread):
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
                                               server_ip=msg['server_ip'], server_port=msg['server_port'],
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
-                    self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
@@ -98,7 +98,8 @@ class messageHandler(threading.Thread):
                                      .format(servers=server_list))
                     for server in server_list:
                         ip, port = server['server_ip'], server['server_port']
-                        self.connect(ip, port)
+                        if not node_map.exists_server(ip, port):
+                            self.connect(ip, port)
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']
