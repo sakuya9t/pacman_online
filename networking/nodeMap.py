@@ -39,3 +39,6 @@ class nodeMap:
         for node in self.map:
             res.append({'server_ip': node['server_ip'], 'server_port': node['server_port']})
         return res
+
+    def get_all_nodes(self):
+        return self.map

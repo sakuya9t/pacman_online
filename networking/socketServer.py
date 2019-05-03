@@ -72,7 +72,7 @@ class socketServer(threading.Thread):
 
     def sendToAllOtherPlayers(self, msg_type, msg):
         # logger.info("Send message to all other players: {msg}".format(msg=msg))
-        for node in self.node_map:
+        for node in self.node_map.get_all_nodes():
             ip, port = node['ip'], node['port']
             self.sendMsg((ip, port), msg_type, msg)
 
