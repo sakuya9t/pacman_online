@@ -25,7 +25,7 @@ class Sequencer(threading.Thread):
     def run(self):
         while self.alive:
             time.sleep(0.001)
-            # try to get the tail of the holdback queue
+            # try to get the tail of the hold back queue
             try:
                 r1_tail = self.r1_hold_q.list[-1]    # a tuple (msg_count, key)
                 r2_tail = self.r2_hold_q.list[-1]

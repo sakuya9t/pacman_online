@@ -29,7 +29,7 @@ class messageHandler(threading.Thread):
         self.logger = logger
         self.alive = True
 
-        # holdback queue
+        # hold back queue
         self.r1_hold_q = Queue()
         self.r2_hold_q = Queue()
         self.b1_hold_q = Queue()
@@ -101,8 +101,9 @@ class messageHandler(threading.Thread):
                         if not node_map.exists_server(ip, port):
                             self.connect(ip, port)
 
+                # as sequencer
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
-                    msg = msg['msg']
+                    msg = msg['msg'] # text
                     agent = msg['agent'].upper()
                     self.logger.info("{message}".format(message=msg))
                     if agent == 'R1':

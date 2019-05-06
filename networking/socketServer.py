@@ -10,6 +10,8 @@ from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
 
+from message import message
+
 RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
 CONTROL_BUFFER = 2
