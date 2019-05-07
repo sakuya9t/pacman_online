@@ -121,7 +121,7 @@ class GameState:
         # Book keeping
         state.data._agentMoved = agentIndex
         state.data.score += state.data.scoreChange
-        state.data.timeleft = self.data.timeleft - 1
+        # state.data.timeleft = self.data.timeleft - 1
         return state
 
     def getAgentState(self, index):

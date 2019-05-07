@@ -117,7 +117,6 @@ class messageHandler(threading.Thread):
                     g_seq = msg['group_sequence']
                     self.logger.info("{message}".format(message=msg))
                     msg_id = tuple(msg_id)
-                    print msg_id
                     self.arrived_g_seq.update({g_seq: msg_id})
                     self.deliver()
 

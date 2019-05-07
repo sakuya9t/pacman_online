@@ -36,7 +36,7 @@ class SocketAgent(Agent):
                 self.recvDirection = Directions.STOP
             time.sleep(0.1)
 
-    def getAction(self, state):
+    def getAction(self, state, real_state):
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
         if move not in legal:
@@ -44,6 +44,7 @@ class SocketAgent(Agent):
 
         if self.recvDirection != "":
             move = self.recvDirection
+            real_state.data.timeleft -= 1
             self.recvDirection= ""
 
         # if move == Directions.STOP:
