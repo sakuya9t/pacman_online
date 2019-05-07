@@ -9,6 +9,7 @@ from connectionThread import connectionThread
 from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
+from random import randint
 
 from message import message
 
@@ -52,10 +53,12 @@ class socketServer(threading.Thread):
 
     def activeConnect(self, ip, port):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.bind((self.ip, 0))
         conn.connect((ip, port))
         logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
         connection_thread = connectionThread(self.conn_id, conn, self, logger)
         connection_thread.start()
+        logger.info("Connected to {ip}:{port}.".format(ip=ip, port=port))
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
 

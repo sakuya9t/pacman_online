@@ -93,7 +93,6 @@ class messageHandler(threading.Thread):
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
                     # Then I am required to connect to all the rest ones.
                     # Used for when 3rd or 4th node joins in.
-                    # Todo: test this method.
                     server_list = msg['msg']
                     self.logger.info("Received a request to connect to the following servers: {servers}"
                                      .format(servers=server_list))
