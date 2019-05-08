@@ -21,7 +21,7 @@ class SocketAgent(Agent):
 
     def constantReceiver(self):
         while True:
-            if self.buffer.isEmpty():
+            if self.buffer.isEmpty() or self.recvDirection != "":
                 continue
             str = self.buffer.pop().strip()
             if str == "left":
@@ -36,7 +36,7 @@ class SocketAgent(Agent):
                 self.recvDirection = Directions.STOP
             time.sleep(0.1)
 
-    def getAction(self, state):
+    def getAction(self, state, real_state):
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
         if move not in legal:
@@ -44,12 +44,13 @@ class SocketAgent(Agent):
 
         if self.recvDirection != "":
             move = self.recvDirection
+            real_state.data.timeleft -= 1
             self.recvDirection= ""
 
-        if move == Directions.STOP:
-            # Try to move in the same direction as before
-            if self.lastMove in legal:
-                move = self.lastMove
+        # if move == Directions.STOP:
+        #     # Try to move in the same direction as before
+        #     if self.lastMove in legal:
+        #         move = self.lastMove
 
         if move not in legal:
             move = Directions.STOP

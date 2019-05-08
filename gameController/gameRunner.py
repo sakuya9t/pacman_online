@@ -38,9 +38,7 @@ class gameRunner(threading.Thread):
         # make B1 the sequencer
         if self.server.role == SEQUENCER:
             print "I am sequencer"
-            self.sequencer = Sequencer(server.message_handler.r1_hold_q, server.message_handler.r2_hold_q,
-                                       server.message_handler.b1_hold_q, server.message_handler.b2_hold_q,
-                                       server)
+            self.sequencer = Sequencer(server.message_handler.seq_queue, server)
             self.sequencer.start()
 
     def run(self):
@@ -109,19 +107,19 @@ class gameRunner(threading.Thread):
         try:
 
             # only work when 4 players are connected (synchronize)
-            # message = {"agent": self.role, "direction": key,
-            #             "server_info": {"ip": self.server.ip, "port": self.server.port},
-            #             "msg_count": self.msg_count}
-            # self.server.recv_queue.push(self.makeFakeControlMessage(message))
-            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
+            message = {"agent": self.role, "direction": key,
+                        "server_info": {"ip": self.server.ip, "port": self.server.port},
+                        "msg_count": self.msg_count}
+            self.server.recv_queue.push(self.makeFakeControlMessage(message))
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
 
             # send direction directly (not synchronize)
-            message = {"agent": self.role, "direction": key,
-                       "server_info": {"ip": self.server.ip, "port": self.server.port}}
-            self.server.recv_queue.push({'ip': 'me', 'port': 'me',
-                                        'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL,
-                                                               'msg': message})})
-            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
+            # message = {"agent": self.role, "direction": key,
+            #            "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            # self.server.recv_queue.push({'ip': 'me', 'port': 'me',
+            #                             'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL,
+            #                                                    'msg': message})})
+            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
 
             # use this for testing
             # self.makeAllFakeMessage(key)

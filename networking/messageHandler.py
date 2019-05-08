@@ -15,6 +15,7 @@ MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
+SEQUENCER = "B1"
 
 class messageHandler(threading.Thread):
     def __init__(self, server, recv_buf, send_buf, logger):
@@ -29,11 +30,11 @@ class messageHandler(threading.Thread):
         self.logger = logger
         self.alive = True
 
-        # hold back queue
-        self.r1_hold_q = Queue()
-        self.r2_hold_q = Queue()
-        self.b1_hold_q = Queue()
-        self.b2_hold_q = Queue()
+        # sequencer hold back queue
+        self.seq_queue = Queue()
+        # key is msg_id, value is direction
+        self.holdback_queue = {}
+        self.arrived_g_seq = {}
         self.p_seq = 0  # process sequence number
 
     def run(self):
@@ -92,7 +93,6 @@ class messageHandler(threading.Thread):
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
                     # Then I am required to connect to all the rest ones.
                     # Used for when 3rd or 4th node joins in.
-                    # Todo: test this method.
                     server_list = msg['msg']
                     self.logger.info("Received a request to connect to the following servers: {servers}"
                                      .format(servers=server_list))
@@ -101,33 +101,23 @@ class messageHandler(threading.Thread):
                         if not node_map.exists_server(ip, port):
                             self.connect(ip, port)
 
-                # as sequencer
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
-                    msg = msg['msg'] # text
-                    agent = msg['agent'].upper()
+                    msg = msg['msg']  # text
                     self.logger.info("{message}".format(message=msg))
-                    if agent == 'R1':
-                        self.r1_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'B1':
-                        self.b1_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'R2':
-                        self.r2_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'B2':
-                        self.b2_hold_q.push((msg['msg_count'], msg['direction']))
+                    agent, msg_count, direction = msg['agent'], msg['msg_count'], msg['direction']
+                    msg_id = (agent, msg_count)
+                    self.holdback_queue.update({msg_id: direction})
+                    if self.server.role == SEQUENCER:
+                        self.seq_queue.push(msg_id)
 
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']
-                    agent = msg['agent'].upper()
-                    msg_count = msg['msg_count']
+                    msg_id = msg['msg_id']
                     g_seq = msg['group_sequence']
                     self.logger.info("{message}".format(message=msg))
-
-                    # assume the messages from sequencer are ordered for now
-                    if self.p_seq == g_seq:
-                        self.deliver(agent, msg_count)
-                        self.p_seq += 1
-                    else:
-                        pass
+                    msg_id = tuple(msg_id)
+                    self.arrived_g_seq.update({g_seq: msg_id})
+                    self.deliver()
 
                 elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
                     msg = msg['msg']
@@ -175,26 +165,24 @@ class messageHandler(threading.Thread):
         self.alive = False
         threading.Thread.join(self, timeout)
         
-    def deliver(self, agent, msg_count):
-        if agent == 'R1':
-            self.deliver_msg_in_q(self.r1_queue, self.r1_hold_q, msg_count)
-        if agent == 'B1':
-            self.deliver_msg_in_q(self.b1_queue, self.b1_hold_q, msg_count)
-        if agent == 'R2':
-            self.deliver_msg_in_q(self.r2_queue, self.r2_hold_q, msg_count)
-        if agent == 'B2':
-            self.deliver_msg_in_q(self.b2_queue, self.b2_hold_q, msg_count)
-
-    def deliver_msg_in_q(self, q, hold_q, msg_count):
-        id, key = hold_q.pop()
-        # delete garbage msg
-        while id != msg_count:
-            id, key = hold_q.pop()
-        # deliver msg
-        if id == msg_count:
-            q.push(key)
-        else:
-            self.logger.error("messageHandler error: message not in queue")
+    def deliver(self):
+        while self.p_seq in self.arrived_g_seq:
+            msg_id = self.arrived_g_seq[self.p_seq]
+            if msg_id in self.holdback_queue:
+                self.arrived_g_seq.pop(self.p_seq)
+                agent, _ = msg_id
+                direction = self.holdback_queue.pop(msg_id)
+                if agent == 'R1':
+                    self.r1_queue.push(direction)
+                if agent == 'B1':
+                    self.b1_queue.push(direction)
+                if agent == 'R2':
+                    self.r2_queue.push(direction)
+                if agent == 'B2':
+                    self.b2_queue.push(direction)
+                self.p_seq += 1
+            else:
+                break
 
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
