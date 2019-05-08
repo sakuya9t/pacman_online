@@ -112,6 +112,7 @@ class gameRunner(threading.Thread):
             print str(time_left)
             # only work when 4 players are connected (synchronize)
             message = {"agent": self.role, "direction": key, "time_left": time_left,
+                       "server_info": {"ip": self.server.ip, "port": self.server.port},
                        "msg_count": self.msg_count}
             self.server.recv_queue.push(self.makeFakeControlMessage(message))
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
