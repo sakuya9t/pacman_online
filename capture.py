@@ -121,7 +121,7 @@ class GameState:
         # Book keeping
         state.data._agentMoved = agentIndex
         state.data.score += state.data.scoreChange
-        # state.data.timeleft = self.data.timeleft - 1
+        state.data.timeleft = self.data.timeleft - 1
         return state
 
     def getAgentState(self, index):
@@ -1089,18 +1089,19 @@ if __name__ == '__main__':
     > python capture.py --help
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
-
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'])
+    global_state = None
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'], global_state=global_state)
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
     del options['ip']
     del options['port']
 
+
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:
         agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                         index=index)
+                                         index=index, global_state=global_state)
         options['agents'][index] = agent
     del options['socket_agent']
 

@@ -9,7 +9,6 @@ from connectionThread import connectionThread
 from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
-from random import randint
 
 from message import message
 
@@ -19,11 +18,12 @@ CONTROL_BUFFER = 2
 
 
 class socketServer(threading.Thread):
-    def __init__(self, serverID, bind_ip, port):
+    def __init__(self, serverID, bind_ip, port, global_state):
         super(socketServer, self).__init__()
         self.serverID = serverID
         self.ip = bind_ip
         self.port = port
+        self.global_state = global_state
         self.connection_pool = []
         self.node_map = nodeMap()
         self.send_queue = Queue()
@@ -53,12 +53,14 @@ class socketServer(threading.Thread):
 
     def activeConnect(self, ip, port):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # print str(socket.AF_INET) + "||" + str(socket.SOCK_STREAM)
+
         conn.bind((self.ip, 0))
+
         conn.connect((ip, port))
         logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
         connection_thread = connectionThread(self.conn_id, conn, self, logger)
         connection_thread.start()
-        logger.info("Connected to {ip}:{port}.".format(ip=ip, port=port))
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
 
@@ -73,6 +75,7 @@ class socketServer(threading.Thread):
     def sendMsg(self, addr, msg_type, msg):
         target_ip, target_port = addr
         msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
+        # print str(self.global_state.getRedFood().list())
         self.send_queue.push(msg_packet)
 
     def sendToAllOtherPlayers(self, msg_type, msg):

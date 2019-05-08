@@ -10,13 +10,15 @@ class SocketAgent(Agent):
     An agent controlled by the socket.
     """
 
-    def __init__(self, command_buffer, index):
+    def __init__(self, command_buffer, index, global_state):
         Agent.__init__(self, index)
         self.buffer = command_buffer
         self.lastMove = Directions.STOP
         self.recvDirection = ""
         self.index = index
+        self.global_state = global_state
         self.keys = []
+        self.state = None
         thread.start_new_thread(self.constantReceiver, ())
 
     def constantReceiver(self):
@@ -36,7 +38,8 @@ class SocketAgent(Agent):
                 self.recvDirection = Directions.STOP
             time.sleep(0.1)
 
-    def getAction(self, state, real_state):
+    def getAction(self, state):
+        self.global_state = state
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
         if move not in legal:
@@ -44,7 +47,6 @@ class SocketAgent(Agent):
 
         if self.recvDirection != "":
             move = self.recvDirection
-            real_state.data.timeleft -= 1
             self.recvDirection= ""
 
         # if move == Directions.STOP:
@@ -57,3 +59,4 @@ class SocketAgent(Agent):
 
         self.lastMove = move
         return move
+
