@@ -42,12 +42,20 @@ class SocketAgent(Agent):
         self.global_state = state
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
-        if move not in legal:
-            move = Directions.STOP
+
+        # TODO while loop will break the program
+        # while True:
+        #     time.sleep(0.01)
+        #     if self.recvDirection == "":
+        #         continue
+        #     else:
+        #         move = self.recvDirection
+        #         self.recvDirection = ""
+        #         break
 
         if self.recvDirection != "":
             move = self.recvDirection
-            self.recvDirection= ""
+            self.recvDirection = ""
 
         # if move == Directions.STOP:
         #     # Try to move in the same direction as before

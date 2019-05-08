@@ -102,15 +102,17 @@ class gameRunner(threading.Thread):
         except Exception as e:
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
 
+    # TODO global_state is still None when gameStart
     def handleArrowControl(self, key):
-        if not self.started:
+        if not self.started or self.server.global_state is None:
+            print str(self.server.global_state)
             return
         try:
-
+            time_left = self.server.global_state.data.timeleft
+            print str(time_left)
             # only work when 4 players are connected (synchronize)
-            message = {"agent": self.role, "direction": key,
-                        "server_info": {"ip": self.server.ip, "port": self.server.port},
-                        "msg_count": self.msg_count}
+            message = {"agent": self.role, "direction": key, "time_left": time_left,
+                       "msg_count": self.msg_count}
             self.server.recv_queue.push(self.makeFakeControlMessage(message))
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
 
