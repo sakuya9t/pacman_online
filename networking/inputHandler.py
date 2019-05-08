@@ -15,10 +15,12 @@ class inputHandler(threading.Thread):
         keyboard.on_press(self.key_press)
         self.msgbuffer = ""
         self.enabled = enabled
+        self.alive = True
 
     def run(self):
-        while True:
-            time.sleep(500)
+        while self.alive:
+            message = raw_input()
+            self.buffer.push({'msg': message})
 
     def key_press(self, key):
         if not self.enabled:
@@ -29,17 +31,10 @@ class inputHandler(threading.Thread):
             return
         if key_name in ['up', 'down', 'left', 'right']:
             self.buffer.push({'key': key_name})
-        if key.name == u'enter':
-            self.buffer.push({'msg': self.msgbuffer})
-            self.msgbuffer = ""
-        else:
-            if key_name == 'space':
-                self.msgbuffer += " "
-            elif key_name == 'backspace':
-                if len(self.msgbuffer) > 0:
-                    self.msgbuffer = self.msgbuffer[:-1]
-            elif len(key_name) == 1:
-                self.msgbuffer += key_name
 
     def setEnabled(self, enabled):
         self.enabled = enabled
+
+    def join(self, timeout=None):
+        self.alive = False
+        keyboard.unhook_all()

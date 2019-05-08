@@ -93,6 +93,7 @@ class socketServer(threading.Thread):
     def join(self, timeout=None):
         self.alive = False
         self.message_handler.join()
+        self.input_handler.join()
         for conn in self.connection_pool:
             conn.join()
         self.conn_recycle_thread.join()

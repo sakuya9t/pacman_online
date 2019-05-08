@@ -34,6 +34,7 @@ class gameRunner(threading.Thread):
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
+        self.sequencer = None
         self.msg_count = 0  # used as message id
         # make B1 the sequencer
         if self.server.role == SEQUENCER:
@@ -95,7 +96,7 @@ class gameRunner(threading.Thread):
             # >exit
             elif 'exit' == msg:
                 self.server.join()
-                if self.sequencer:
+                if self.sequencer is not None:
                     self.sequencer.exit()
                 self.alive = False
         except Exception as e:
@@ -130,10 +131,15 @@ class gameRunner(threading.Thread):
 
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
+        existing_server_list = self.server.node_map.get_all_servers()
         # First send a message to tell the target server our server info
         my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.role
         self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
                             {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})
+        # Then send a message to request target server connect to all servers we have connected to.
+        self.server.sendMsg(addr=(ip, port),
+                            msg_type=MESSAGE_TYPE_EXISTING_NODES,
+                            msg=existing_server_list)
 
     def join(self, timeout=None):
         self.alive = False
