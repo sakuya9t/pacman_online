@@ -40,6 +40,7 @@ class SocketAgent(Agent):
 
     def getAction(self, state):
         self.global_state = state
+        print(state.data)
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
         if move not in legal:

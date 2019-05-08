@@ -3,10 +3,6 @@ import keyboard
 import time
 
 
-KEY_PRESS_EVENT_MODE = 0
-INPUT_MODE = 1
-
-
 class inputHandler(threading.Thread):
     def __init__(self, server, enabled):
         super(inputHandler, self).__init__()

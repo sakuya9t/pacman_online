@@ -913,14 +913,14 @@ def readCommand(argv):
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
         if not val: continue
         args['myrole'] = agents_enum[index]
-        if numKeyboardAgents == 0:
-            agent = keyboardAgents.KeyboardAgent(index)
-        elif numKeyboardAgents == 1:
-            agent = keyboardAgents.KeyboardAgent2(index)
-        else:
-            raise Exception('Max of two keyboard agents supported')
-        numKeyboardAgents += 1
-        args['agents'][index] = agent
+        # if numKeyboardAgents == 0:
+        #     agent = keyboardAgents.KeyboardAgent(index)
+        # elif numKeyboardAgents == 1:
+        #     agent = keyboardAgents.KeyboardAgent2(index)
+        # else:
+        #     raise Exception('Max of two keyboard agents supported')
+        # numKeyboardAgents += 1
+        # args['agents'][index] = agent
 
     args['socket_agent'] = []
     numSocketAgents = 0
@@ -1090,13 +1090,13 @@ if __name__ == '__main__':
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
     global_state = None
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'], global_state=global_state)
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'],
+                          global_state=global_state)
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
     del options['ip']
     del options['port']
-
 
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:

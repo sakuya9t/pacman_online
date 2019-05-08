@@ -709,7 +709,7 @@ class Game:
                     self.unmute()
                     return
             else:
-                action = agent.getAction(observation, self.state)
+                action = agent.getAction(observation)
             self.unmute()
 
             # Execute the action

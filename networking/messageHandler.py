@@ -84,10 +84,11 @@ class messageHandler(threading.Thread):
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
-                    self.server.appendNodeMap(ip=source_ip, port=source_port,
-                                              server_ip=msg['server_ip'], server_port=msg['server_port'],
-                                              role=msg['agent_id'], status=STATUS_NOT_READY)
-                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                    if not node_map.exists_server(msg['server_ip'], server_port=msg['server_port']):
+                        self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                                  server_ip=msg['server_ip'], server_port=msg['server_port'],
+                                                  role=msg['agent_id'], status=STATUS_NOT_READY)
+                        self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
@@ -100,6 +101,10 @@ class messageHandler(threading.Thread):
                         ip, port = server['server_ip'], server['server_port']
                         if not node_map.exists_server(ip, port):
                             self.connect(ip, port)
+                            self.server.appendNodeMap(ip=ip, port=port,
+                                                      server_ip=ip, server_port=port,
+                                                      role=server['agent_id'], status=STATUS_NOT_READY)
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']  # text

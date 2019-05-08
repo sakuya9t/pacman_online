@@ -10,8 +10,6 @@ from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
 
-from message import message
-
 RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
 CONTROL_BUFFER = 2
@@ -53,10 +51,7 @@ class socketServer(threading.Thread):
 
     def activeConnect(self, ip, port):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # print str(socket.AF_INET) + "||" + str(socket.SOCK_STREAM)
-
         conn.bind((self.ip, 0))
-
         conn.connect((ip, port))
         logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
         connection_thread = connectionThread(self.conn_id, conn, self, logger)
