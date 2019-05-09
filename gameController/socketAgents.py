@@ -10,15 +10,16 @@ class SocketAgent(Agent):
     An agent controlled by the socket.
     """
 
-    def __init__(self, command_buffer, index, global_state):
+    def __init__(self, command_buffer, index, server):
         Agent.__init__(self, index)
         self.buffer = command_buffer
         self.lastMove = Directions.STOP
         self.recvDirection = ""
         self.index = index
-        self.global_state = global_state
+        self.server = server
         self.keys = []
         self.state = None
+        self.ready = False
         thread.start_new_thread(self.constantReceiver, ())
 
     def constantReceiver(self):
@@ -36,19 +37,28 @@ class SocketAgent(Agent):
                 self.recvDirection = Directions.NORTH
             else:
                 self.recvDirection = Directions.STOP
+            self.ready = True
             time.sleep(0.1)
 
     def getAction(self, state):
-        self.global_state = state
-        print(state.data)
+        self.server.global_state = state
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
-        if move not in legal:
-            move = Directions.STOP
 
-        if self.recvDirection != "":
-            move = self.recvDirection
-            self.recvDirection= ""
+        # TODO while loop will break the program
+        while True:
+            time.sleep(0.01)
+            if self.recvDirection == "":
+                continue
+            else:
+                move = self.recvDirection
+                self.recvDirection = ""
+                break
+        #
+        # if self.recvDirection != "":
+        #     move = self.recvDirection
+        #     self.recvDirection = ""
+        #     self.ready = False
 
         # if move == Directions.STOP:
         #     # Try to move in the same direction as before

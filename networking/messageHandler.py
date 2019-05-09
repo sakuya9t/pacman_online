@@ -2,7 +2,7 @@ import threading
 import json
 import time
 
-from util import Queue
+from util import Queue, PriorityQueue
 
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
@@ -31,7 +31,7 @@ class messageHandler(threading.Thread):
         self.alive = True
 
         # sequencer hold back queue
-        self.seq_queue = Queue()
+        self.seq_queue = PriorityQueue()
         # key is msg_id, value is direction
         self.holdback_queue = {}
         self.arrived_g_seq = {}
@@ -113,7 +113,9 @@ class messageHandler(threading.Thread):
                     msg_id = (agent, msg_count)
                     self.holdback_queue.update({msg_id: direction})
                     if self.server.role == SEQUENCER:
-                        self.seq_queue.push(msg_id)
+                        time_left = msg['time_left']
+                        priority = - time_left
+                        self.seq_queue.push(msg_id, priority)
 
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']
