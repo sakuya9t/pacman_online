@@ -18,12 +18,12 @@ CONTROL_BUFFER = 2
 
 
 class socketServer(threading.Thread):
-    def __init__(self, serverID, bind_ip, port, global_state):
+    def __init__(self, serverID, bind_ip, port):
         super(socketServer, self).__init__()
         self.serverID = serverID
         self.ip = bind_ip
         self.port = port
-        self.global_state = global_state
+        self.global_state = None
         self.connection_pool = []
         self.node_map = nodeMap()
         self.send_queue = Queue()
@@ -31,7 +31,7 @@ class socketServer(threading.Thread):
         self.recv_queue = Queue()
         self.message_handler = messageHandler(server=self, recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
-        self.input_handler = inputHandler(self, enabled=True)
+        self.input_handler = inputHandler(self)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
         self.alive = True

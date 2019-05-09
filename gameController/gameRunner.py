@@ -104,11 +104,11 @@ class gameRunner(threading.Thread):
 
     # TODO global_state is still None when gameStart
     def handleArrowControl(self, key):
-        if not self.started or self.server.global_state is None:
+        if not self.started:
             print str(self.server.global_state)
             return
         try:
-            time_left = self.server.global_state.data.timeleft
+            time_left = 9999 if self.server.global_state is None else self.server.global_state.data.timeleft
             print str(time_left)
             # only work when 4 players are connected (synchronize)
             message = {"agent": self.role, "direction": key, "time_left": time_left,
