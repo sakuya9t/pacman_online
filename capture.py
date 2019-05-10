@@ -1100,7 +1100,7 @@ if __name__ == '__main__':
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:
         agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                         index=index, server=server)
+                                         index=index, server=server, display=options['display'])
         options['agents'][index] = agent
     del options['socket_agent']
 

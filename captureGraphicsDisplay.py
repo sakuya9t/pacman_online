@@ -183,6 +183,7 @@ class PacmanGraphics:
         self.frameTime = frameTime
         self.redTeam = redTeam
         self.blueTeam = blueTeam
+        self.root_window = None
 
     def initialize(self, state, isBlue = False):
         self.isBlue = isBlue
@@ -286,7 +287,7 @@ class PacmanGraphics:
         begin_graphics(screen_width,
                        screen_height,
                        BACKGROUND_COLOR,
-                       "CS188 Pacman")
+                       "CS188 Pacman", self)
 
     def drawPacman(self, pacman, index):
         position = self.getPosition(pacman)
