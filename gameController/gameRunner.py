@@ -92,6 +92,11 @@ class gameRunner(threading.Thread):
             elif 'ready' == msg:
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GET_READY, {"agent": self.role})
 
+            # Test: get game state
+            elif 'state' == msg:
+                if self.server.game is not None:
+                    self.logger.info(self.server.game.state.data)
+
             # End the game and kill all threads.
             # >exit
             elif 'exit' == msg:
@@ -156,6 +161,7 @@ class gameRunner(threading.Thread):
 
     def runGame(self):
         from capture import runGames, save_score
+        self.options['server'] = self.server
         games = runGames(**self.options)
         self.started = False
         save_score(games[0])

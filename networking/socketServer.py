@@ -35,6 +35,7 @@ class socketServer(threading.Thread):
         self.alive = True
         self.logger = logger
         self.role = ''
+        self.game = None
 
     def run(self):
         self.message_handler.start()

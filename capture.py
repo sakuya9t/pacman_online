@@ -1024,7 +1024,7 @@ def replayGame(layout, agents, actions, display, length, redTeamName, blueTeamNa
     display.finish()
 
 
-def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName,
+def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName, server,
              muteAgents=False, catchExceptions=False):
     rules = CaptureRules()
     games = []
@@ -1044,6 +1044,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
             gameDisplay = display
             rules.quiet = False
         g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        server.game = g
         g.run()
         if not beQuiet: games.append(g)
 
