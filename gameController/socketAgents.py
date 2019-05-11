@@ -45,7 +45,6 @@ class SocketAgent(Agent):
         legal = state.getLegalActions(self.index)
         move = Directions.STOP
 
-        # TODO while loop will break the program
         while True:
             time.sleep(0.01)
             if self.recvDirection == "":
