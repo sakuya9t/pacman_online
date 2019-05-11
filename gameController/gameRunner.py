@@ -14,6 +14,7 @@ MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
 MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 SEQUENCER = "B1"
@@ -94,8 +95,10 @@ class gameRunner(threading.Thread):
 
             # Test: get game state
             elif 'state' == msg:
-                if self.server.game is not None:
-                    self.logger.info(self.server.game.state.data)
+                data = self.server.game.state.data
+                if data is not None:
+                    message = data.json()
+                    self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, message)
 
             # End the game and kill all threads.
             # >exit
@@ -110,11 +113,9 @@ class gameRunner(threading.Thread):
     # TODO global_state is still None when gameStart
     def handleArrowControl(self, key):
         if not self.started:
-            print str(self.server.global_state)
             return
         try:
             time_left = 9999 if self.server.global_state is None else self.server.global_state.data.timeleft
-            print str(time_left)
             # only work when 4 players are connected (synchronize)
             message = {"agent": self.role, "direction": key, "time_left": time_left,
                        "server_info": {"ip": self.server.ip, "port": self.server.port},

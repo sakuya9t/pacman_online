@@ -13,6 +13,7 @@ MESSAGE_TYPE_GET_READY = 'get_ready'
 MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 SEQUENCER = "B1"
@@ -138,17 +139,10 @@ class messageHandler(threading.Thread):
                     if agent == 'B2':
                         self.b2_queue.push(msg['direction'])
 
-                # elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
-                #     msg = msg['msg']
-                #     agent = msg['agent'].upper()
-                #     if agent == 'R1':
-                #         self.r1_queue.push(msg['direction'])
-                #     if agent == 'B1':
-                #         self.b1_queue.push(msg['direction'])
-                #     if agent == 'R2':
-                #         self.r2_queue.push(msg['direction'])
-                #     if agent == 'B2':
-                #         self.b2_queue.push(msg['direction'])
+                elif msg_type == MESSAGE_TYPE_GAME_STATE:
+                    msg = msg['msg']
+                    self.logger.info("Received game state data.")
+                    gamestate_data = json.loads(msg)
 
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
@@ -156,8 +150,6 @@ class messageHandler(threading.Thread):
 
                 elif msg_type == MESSAGE_TYPE_START_GAME:
                     # another player requires to start the game.
-                    # todo: currently anyone requires gamestart causes game start, but we should wait until all ready.
-                    print msg
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
 

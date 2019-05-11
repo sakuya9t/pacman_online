@@ -20,7 +20,7 @@ class connectionThread(threading.Thread):
         # do something
         while self.alive:
             try:
-                message = self.connection.recv(4096)
+                message = self.connection.recv(16384)
                 if not message:
                     break
                 self.recv_queue.push({"ip": self.client_ip, "port": self.client_port,
