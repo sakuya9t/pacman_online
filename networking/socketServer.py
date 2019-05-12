@@ -4,10 +4,12 @@ import time
 import json
 
 from logger import logger
+from nodeMap import nodeMap
 from connectionThread import connectionThread
 from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
+from sequencer import Sequencer
 
 RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
@@ -20,19 +22,23 @@ class socketServer(threading.Thread):
         self.serverID = serverID
         self.ip = bind_ip
         self.port = port
+        self.global_state = None
         self.connection_pool = []
-        self.node_map = []
+        self.node_map = nodeMap()
         self.send_queue = Queue()
         self.send_queue_thread = messageSendingQueueThread(self.send_queue, SEND_BUFFER, self.connection_pool)
         self.recv_queue = Queue()
         self.message_handler = messageHandler(server=self, recv_buf=self.recv_queue, send_buf=self.send_queue, logger=logger)
         self.input_queue = Queue()
-        self.input_handler = inputHandler(self, enabled=True)
+        self.input_handler = inputHandler(self)
         self.conn_recycle_thread = connectionRecycleThread(self.connection_pool)
         self.conn_id = 0
         self.alive = True
         self.logger = logger
         self.role = ''
+        self.sequencer = None
+        self.sequencer_role = None
+        self.game = None
 
     def run(self):
         self.message_handler.start()
@@ -49,6 +55,7 @@ class socketServer(threading.Thread):
 
     def activeConnect(self, ip, port):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.bind((self.ip, 0))
         conn.connect((ip, port))
         logger.info("Establishing active connection to {ip}:{port}.".format(ip=ip, port=port))
         connection_thread = connectionThread(self.conn_id, conn, self, logger)
@@ -67,22 +74,44 @@ class socketServer(threading.Thread):
     def sendMsg(self, addr, msg_type, msg):
         target_ip, target_port = addr
         msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
+        # print str(self.global_state.getRedFood().list())
         self.send_queue.push(msg_packet)
 
     def sendToAllOtherPlayers(self, msg_type, msg):
-        logger.info("Send message to all other players: {msg}".format(msg=msg))
-        for node in self.node_map:
-            server_info = node['server']
-            server_ip, server_port = server_info['ip'], server_info['port']
-            self.sendMsg((server_ip, server_port), msg_type, msg)
+        # logger.info("Send message to all other players: {msg}".format(msg=msg))
+        for node in self.node_map.get_all_nodes():
+            ip, port = node['ip'], node['port']
+            self.sendMsg((ip, port), msg_type, msg)
+
+    def multicastToNonSequencer(self, msg_type, msg):
+        for node in self.node_map.get_all_nodes():
+            ip, port, role = node['ip'], node['port'], node['agent']
+            if role != self.sequencer_role:
+                self.sendMsg((ip, port), msg_type, msg)
+
+    def appendNodeMap(self, ip, port, server_ip, server_port, role, status):
+        self.node_map.append(ip, port, server_ip, server_port, role, status)
+
+    def updateNodeMap(self, ip, port, server_ip, server_port, role, status):
+        self.node_map.update(ip, port, server_ip, server_port, role, status)
+
+    def removeNodeMap(self, ip, port):
+        self.node_map.remove(ip, port)
 
     def join(self, timeout=None):
         self.alive = False
         self.message_handler.join()
+        self.input_handler.join()
         for conn in self.connection_pool:
             conn.join()
         self.conn_recycle_thread.join()
-        threading.Thread.join(self, timeout)
+        self.logger.exit()
+        if self.sequencer is not None:
+            self.sequencer.exit()
+
+    def createSequencer(self):
+        self.sequencer = Sequencer(self.message_handler.seq_queue, self)
+        self.sequencer.start()
 
 
 class connectionRecycleThread(threading.Thread):
@@ -99,7 +128,6 @@ class connectionRecycleThread(threading.Thread):
                     logger.info("Recycled thread for connection.")
                     thread.join()
                     self.pool.remove(thread)
-            time.sleep(1)
 
     def join(self, timeout=None):
         self.alive = False
@@ -137,6 +165,6 @@ def generateServerID(port_num):
 if __name__ == '__main__':
     from networking.inputHandler import inputHandler
     server = socketServer(0, "0.0.0.0", 8080)
-    input_handler = inputHandler(server)
+    input_handler = inputHandler(server, False)
     server.start()
     input_handler.start()

@@ -8,9 +8,10 @@ class logger(threading.Thread):
     def __init__(self):
         super(logger, self).__init__()
         self.buffer = Queue()
+        self.alive = True
 
     def run(self):
-        while True:
+        while self.alive:
             if self.buffer.isEmpty():
                 continue
             else:
@@ -30,7 +31,10 @@ class logger(threading.Thread):
     def warning(self, message):
         time = str(datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]"))
         message = str(message)
-        self.buffer.push("\033[93m (ERROR) {time} {message}".format(time=time, message=message))
+        self.buffer.push("\033[93m (WARNING) {time} {message}".format(time=time, message=message))
+
+    def exit(self):
+        self.alive = False
 
 
 logger = logger()

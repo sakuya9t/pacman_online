@@ -849,8 +849,9 @@ def readCommand(argv):
                       help=default('How many episodes are training (suppresses output)'), default=0)
     parser.add_option('-c', '--catchExceptions', action='store_true', default=False,
                       help='Catch exceptions and enforce time limits')
+    parser.add_option('--ip', dest='ip', help=default('Ip address for server'), default='0.0.0.0')
     parser.add_option('--port', dest='port', type='int',
-                      help=default('Port number of game receiver'), default=8080)
+                      help=default('Port number of game receiver'), default=8000)
     parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
                       help='Disable the keyboard so that we can test only one input.', default=False)
 
@@ -912,14 +913,14 @@ def readCommand(argv):
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
         if not val: continue
         args['myrole'] = agents_enum[index]
-        if numKeyboardAgents == 0:
-            agent = keyboardAgents.KeyboardAgent(index)
-        elif numKeyboardAgents == 1:
-            agent = keyboardAgents.KeyboardAgent2(index)
-        else:
-            raise Exception('Max of two keyboard agents supported')
-        numKeyboardAgents += 1
-        args['agents'][index] = agent
+        # if numKeyboardAgents == 0:
+        #     agent = keyboardAgents.KeyboardAgent(index)
+        # elif numKeyboardAgents == 1:
+        #     agent = keyboardAgents.KeyboardAgent2(index)
+        # else:
+        #     raise Exception('Max of two keyboard agents supported')
+        # numKeyboardAgents += 1
+        # args['agents'][index] = agent
 
     args['socket_agent'] = []
     numSocketAgents = 0
@@ -952,6 +953,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['ip'] = options.ip
     args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
@@ -1022,7 +1024,7 @@ def replayGame(layout, agents, actions, display, length, redTeamName, blueTeamNa
     display.finish()
 
 
-def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName,
+def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName, server,
              muteAgents=False, catchExceptions=False):
     rules = CaptureRules()
     games = []
@@ -1042,6 +1044,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
             gameDisplay = display
             rules.quiet = False
         g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        server.game = g
         g.run()
         if not beQuiet: games.append(g)
 
@@ -1088,16 +1091,17 @@ if __name__ == '__main__':
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
-    server = socketServer(serverID=generateServerID(options['port']), bind_ip='127.0.0.1', port=options['port'])
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'])
     socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
                                    server.message_handler.r2_queue, server.message_handler.b2_queue]
     server.start()
+    del options['ip']
     del options['port']
 
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:
         agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                         index=index)
+                                         index=index, server=server, display=options['display'])
         options['agents'][index] = agent
     del options['socket_agent']
 

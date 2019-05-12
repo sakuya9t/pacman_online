@@ -2,16 +2,21 @@ import threading
 import json
 import time
 
-from util import Queue
+from util import Queue, PriorityQueue
 
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
+MESSAGE_TYPE_GET_READY = 'get_ready'
+MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
-
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
+MESSAGE_TYPE_VOTE_STATE = 'vote_state'
+STATUS_READY = 'ready'
+STATUS_NOT_READY = 'not_ready'
 
 
 class messageHandler(threading.Thread):
@@ -25,16 +30,17 @@ class messageHandler(threading.Thread):
         self.b1_queue = Queue()
         self.b2_queue = Queue()
         self.logger = logger
+        self.alive = True
 
-        # holdback queue
-        self.r1_hold_q = Queue()
-        self.r2_hold_q = Queue()
-        self.b1_hold_q = Queue()
-        self.b2_hold_q = Queue()
+        # sequencer hold back queue
+        self.seq_queue = PriorityQueue()
+        # key is msg_id, value is direction
+        self.holdback_queue = {}
+        self.arrived_g_seq = {}
         self.p_seq = 0  # process sequence number
 
     def run(self):
-        while True:
+        while self.alive:
             time.sleep(0.1)
             if self.recv_buf.isEmpty():
                 continue
@@ -44,65 +50,87 @@ class messageHandler(threading.Thread):
                 source_ip, source_port = msg['ip'], msg['port']
                 msg = json.loads(msg['message'])
                 msg_type = msg['type']
+                node_map = self.server.node_map
+                my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
 
                 if msg_type == MESSAGE_TYPE_CONNECT_TO_SERVER:
                     self.logger.info("Received connection request from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
+
                     # connect to source_ip:source_port
                     msg = msg['msg']
-                    otherserver_ip, otherserver_port = msg['ip'], msg['port']
-                    my_ip, my_port, my_role = self.server.ip, self.server.port, self.server.role
-                    self.server.node_map.append({'client': {'ip': source_ip, 'port': source_port},
-                                                 'server': {'ip': otherserver_ip, 'port': otherserver_port},
-                                                 'agent': msg['agent_id']})
-                    self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
-                    self.server.activeConnect(msg['ip'], msg['port'])
-                    self.server.sendMsg(addr=(otherserver_ip, otherserver_port),
+
+                    # if there is already a player claiming he is R1, don't let another R1 get online.
+                    if node_map.exists_agent(msg['agent_id']):
+                        self.logger.info("Player {role} already exists, rejected connection."
+                                         .format(role=msg['agent_id']))
+                        # todo: disconnect with corresponding node.
+                        continue
+
+                    # if there are already other nodes existing, send their server address to new node.
+                    existing_server_list = node_map.get_all_servers()
+                    self.server.sendMsg(addr=(source_ip, source_port),
+                                        msg_type=MESSAGE_TYPE_EXISTING_NODES,
+                                        msg=existing_server_list)
+
+                    self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                              server_ip=msg['server_ip'], server_port=msg['server_port'],
+                                              role=msg['agent_id'], status=STATUS_NOT_READY)
+                    # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                    self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
-                                        msg={'ip': my_ip, 'port': my_port, 'agent_id': my_role})
+                                        msg={'server_ip': my_serverip, 'server_port': my_serverport,
+                                             'agent_id': my_role})
 
                 elif msg_type == MESSAGE_TYPE_CONNECT_CONFIRM:
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
-                    self.server.node_map.append({'client': {'ip': source_ip, 'port': source_port},
-                                                 'server': {'ip': msg['ip'], 'port': msg['port']},
-                                                 'agent': msg['agent_id']})
-                    self.logger.info("Node map changed: {node_map}".format(node_map=self.server.node_map))
+                    if not node_map.exists_server(msg['server_ip'], server_port=msg['server_port']):
+                        self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                                  server_ip=msg['server_ip'], server_port=msg['server_port'],
+                                                  role=msg['agent_id'], status=STATUS_NOT_READY)
+                        # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+
+                elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
+                    # Some nodes are already existed, I get this message because I am connecting to one of them.
+                    # Then I am required to connect to all the rest ones.
+                    # Used for when 3rd or 4th node joins in.
+                    server_list = msg['msg']
+                    self.logger.info("Received a request to connect to the following servers: {servers}"
+                                     .format(servers=server_list))
+                    for server in server_list:
+                        ip, port = server['server_ip'], server['server_port']
+                        if not node_map.exists_server(ip, port):
+                            self.connect(ip, port)
+                            self.server.appendNodeMap(ip=ip, port=port,
+                                                      server_ip=ip, server_port=port,
+                                                      role=server['agent_id'], status=STATUS_NOT_READY)
+                    # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
-                    msg = msg['msg']
-                    agent = msg['agent'].upper()
+                    msg = msg['msg']  # text
                     self.logger.info("{message}".format(message=msg))
-                    if agent == 'R1':
-                        self.r1_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'B1':
-                        self.b1_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'R2':
-                        self.r2_hold_q.push((msg['msg_count'], msg['direction']))
-                    if agent == 'B2':
-                        self.b2_hold_q.push((msg['msg_count'], msg['direction']))
+                    agent, msg_count, direction = msg['agent'], msg['msg_count'], msg['direction']
+                    msg_id = (agent, msg_count)
+                    self.holdback_queue.update({msg_id: direction})
+                    if self.server.sequencer is not None:
+                        time_left = msg['time_left']
+                        priority = - time_left
+                        self.seq_queue.push(msg_id, priority)
 
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']
-                    agent = msg['agent'].upper()
-                    msg_count = msg['msg_count']
+                    msg_id = msg['msg_id']
                     g_seq = msg['group_sequence']
                     self.logger.info("{message}".format(message=msg))
-
-                    # assume the messages from sequencer are ordered for now
-                    if self.p_seq == g_seq:
-                        self.deliver(agent, msg_count)
-                        self.p_seq += 1
-                    else:
-                        pass
+                    msg_id = tuple(msg_id)
+                    self.arrived_g_seq.update({g_seq: msg_id})
+                    self.deliver()
 
                 elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
                     msg = msg['msg']
                     agent = msg['agent'].upper()
-                    print msg
-                    print agent
-                    print msg['direction']
                     if agent == 'R1':
                         self.r1_queue.push(msg['direction'])
                     if agent == 'B1':
@@ -112,26 +140,25 @@ class messageHandler(threading.Thread):
                     if agent == 'B2':
                         self.b2_queue.push(msg['direction'])
 
-                # elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
-                #     msg = msg['msg']
-                #     agent = msg['agent'].upper()
-                #     if agent == 'R1':
-                #         self.r1_queue.push(msg['direction'])
-                #     if agent == 'B1':
-                #         self.b1_queue.push(msg['direction'])
-                #     if agent == 'R2':
-                #         self.r2_queue.push(msg['direction'])
-                #     if agent == 'B2':
-                #         self.b2_queue.push(msg['direction'])
+                elif msg_type == MESSAGE_TYPE_GAME_STATE:
+                    # If received game state sent from p*, send (vi, pj) for pj != p*
+                    msg = msg['msg']
+                    self.logger.info("Received game state data from general.")
+                    self.server.multicastToNonSequencer(MESSAGE_TYPE_VOTE_STATE,
+                                                        {'data': msg, 'agent': self.server.role})
 
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
 
+                elif msg_type == MESSAGE_TYPE_VOTE_STATE:
+                    msg = msg['msg']
+                    data = json.loads(msg['data'])
+                    self.logger.info("Received vote state data from {peer} for timestamp {timestamp}."
+                                     .format(peer=msg['agent'], timestamp=data['timeleft']))
+
                 elif msg_type == MESSAGE_TYPE_START_GAME:
                     # another player requires to start the game.
-                    # todo: currently anyone requires gamestart causes game start, but we should wait until all ready.
-                    print msg
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
 
@@ -142,23 +169,42 @@ class messageHandler(threading.Thread):
                 print(msg)
                 self.logger.error(str(e))
 
-    def deliver(self, agent, msg_count):
-        if agent == 'R1':
-            self.deliver_msg_in_q(self.r1_queue, self.r1_hold_q, msg_count)
-        if agent == 'B1':
-            self.deliver_msg_in_q(self.b1_queue, self.b1_hold_q, msg_count)
-        if agent == 'R2':
-            self.deliver_msg_in_q(self.r2_queue, self.r2_hold_q, msg_count)
-        if agent == 'B2':
-            self.deliver_msg_in_q(self.b2_queue, self.b2_hold_q, msg_count)
+    def join(self, timeout=None):
+        self.alive = False
+        threading.Thread.join(self, timeout)
+        
+    def deliver(self):
+        while self.p_seq in self.arrived_g_seq:
+            msg_id = self.arrived_g_seq[self.p_seq]
+            if msg_id in self.holdback_queue:
+                self.arrived_g_seq.pop(self.p_seq)
+                agent, _ = msg_id
+                direction = self.holdback_queue.pop(msg_id)
+                if agent == 'R1':
+                    self.r1_queue.push(direction)
+                if agent == 'B1':
+                    self.b1_queue.push(direction)
+                if agent == 'R2':
+                    self.r2_queue.push(direction)
+                if agent == 'B2':
+                    self.b2_queue.push(direction)
+                self.p_seq += 1
+            else:
+                break
 
-    def deliver_msg_in_q(self, q, hold_q, msg_count):
-        id, key = hold_q.pop()
-        # delete garbage msg
-        while id != msg_count:
-            id, key = hold_q.pop()
-        # deliver msg
-        if id == msg_count:
-            q.push(key)
-        else:
-            self.logger.error("messageHandler error: message not in queue")
+    def connect(self, ip, port):
+        self.server.activeConnect(ip, port)
+        # First send a message to tell the target server our server info
+        my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
+        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
+                            {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})
+
+    def resetGames(self):
+        del self.r1_queue.list[:]
+        del self.r2_queue.list[:]
+        del self.b1_queue.list[:]
+        del self.b2_queue.list[:]
+        del self.seq_queue.heap[:]
+        self.holdback_queue.clear()
+        self.arrived_g_seq.clear()
+        self.p_seq = 0
