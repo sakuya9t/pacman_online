@@ -9,6 +9,7 @@ from connectionThread import connectionThread
 from networking.messageHandler import messageHandler
 from networking.inputHandler import inputHandler
 from util import Queue
+from sequencer import Sequencer
 
 RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
@@ -35,6 +36,7 @@ class socketServer(threading.Thread):
         self.alive = True
         self.logger = logger
         self.role = ''
+        self.sequencer = None
         self.game = None
 
     def run(self):
@@ -97,6 +99,12 @@ class socketServer(threading.Thread):
             conn.join()
         self.conn_recycle_thread.join()
         self.logger.exit()
+        if self.sequencer is not None:
+            self.sequencer.exit()
+
+    def createSequencer(self):
+        self.sequencer = Sequencer(self.message_handler.seq_queue, self)
+        self.sequencer.start()
 
 
 class connectionRecycleThread(threading.Thread):

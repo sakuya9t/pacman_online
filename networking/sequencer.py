@@ -32,5 +32,8 @@ class Sequencer(threading.Thread):
     def makeFakeControlMessage(self, message):
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
 
+    def resetGames(self):
+        self.g_seq = 0
+
     def exit(self):
         self.alive = False

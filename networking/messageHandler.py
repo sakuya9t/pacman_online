@@ -16,7 +16,6 @@ MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
-SEQUENCER = "B1"
 
 class messageHandler(threading.Thread):
     def __init__(self, server, recv_buf, send_buf, logger):
@@ -113,7 +112,7 @@ class messageHandler(threading.Thread):
                     agent, msg_count, direction = msg['agent'], msg['msg_count'], msg['direction']
                     msg_id = (agent, msg_count)
                     self.holdback_queue.update({msg_id: direction})
-                    if self.server.role == SEQUENCER:
+                    if self.server.sequencer is not None:
                         time_left = msg['time_left']
                         priority = - time_left
                         self.seq_queue.push(msg_id, priority)
@@ -143,7 +142,6 @@ class messageHandler(threading.Thread):
                     msg = msg['msg']
                     self.logger.info("Received game state data.")
                     gamestate_data = json.loads(msg)
-
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
@@ -189,3 +187,13 @@ class messageHandler(threading.Thread):
         my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
         self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
                             {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})
+
+    def resetGames(self):
+        del self.r1_queue.list[:]
+        del self.r2_queue.list[:]
+        del self.b1_queue.list[:]
+        del self.b2_queue.list[:]
+        del self.seq_queue.heap[:]
+        self.holdback_queue.clear()
+        self.arrived_g_seq.clear()
+        self.p_seq = 0
