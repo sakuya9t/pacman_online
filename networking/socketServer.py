@@ -37,6 +37,7 @@ class socketServer(threading.Thread):
         self.logger = logger
         self.role = ''
         self.sequencer = None
+        self.sequencer_role = None
         self.game = None
 
     def run(self):
@@ -81,6 +82,12 @@ class socketServer(threading.Thread):
         for node in self.node_map.get_all_nodes():
             ip, port = node['ip'], node['port']
             self.sendMsg((ip, port), msg_type, msg)
+
+    def multicastToNonSequencer(self, msg_type, msg):
+        for node in self.node_map.get_all_nodes():
+            ip, port, role = node['ip'], node['port'], node['agent']
+            if role != self.sequencer_role:
+                self.sendMsg((ip, port), msg_type, msg)
 
     def appendNodeMap(self, ip, port, server_ip, server_port, role, status):
         self.node_map.append(ip, port, server_ip, server_port, role, status)

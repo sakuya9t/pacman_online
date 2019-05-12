@@ -30,12 +30,14 @@ class gameRunner(threading.Thread):
         self.control_queue = server.input_queue
         self.logger = server.logger
         self.clients = []
+        self.display = options['display']
         self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
         self.msg_count = 0  # used as message id
+        self.server.sequencer_role = SEQUENCER
         # make B1 the sequencer
         if self.server.role == SEQUENCER:
             print "I am sequencer"
@@ -142,6 +144,10 @@ class gameRunner(threading.Thread):
         self.server.sendMsg(addr=(ip, port),
                             msg_type=MESSAGE_TYPE_EXISTING_NODES,
                             msg=existing_server_list)
+
+    def updateStateToDisplay(self):
+        self.display.update(self.server.game.state)
+        self.logger.info("Updated new game state to game UI.")
 
     def join(self, timeout=None):
         self.alive = False

@@ -440,7 +440,7 @@ class GameStateData:
 
     def json(self):
         obj = {'agentStates': list(map(lambda x: x.json(), self.agentStates)), 'food': self.food.json(),
-               'capsules': self.capsules, 'score': self.score}
+               'capsules': self.capsules, 'score': self.score, 'timeleft': self.timeleft}
         return json.dumps(obj)
 
     def __eq__(self, other):

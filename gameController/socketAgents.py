@@ -5,6 +5,9 @@ from game import Agent
 from game import Directions
 
 
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
+
+
 class SocketAgent(Agent):
     """
     An agent controlled by the socket.
@@ -42,6 +45,7 @@ class SocketAgent(Agent):
             time.sleep(0.1)
 
     def getAction(self, state):
+        self.multicastGameState()
         self.server.global_state = state
         legal = state.getLegalActions(self.index)
         root_window = self.display.root_window
@@ -61,4 +65,11 @@ class SocketAgent(Agent):
 
         self.lastMove = move
         return move
+
+    def multicastGameState(self):
+        data = self.server.game.state.data
+        seq = self.server.sequencer
+        if seq is not None and data is not None:
+            data_dump = data.json()
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
 
