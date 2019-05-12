@@ -13,6 +13,7 @@ MESSAGE_TYPE_GET_READY = 'get_ready'
 MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 
@@ -83,10 +84,11 @@ class messageHandler(threading.Thread):
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
-                    self.server.appendNodeMap(ip=source_ip, port=source_port,
-                                              server_ip=msg['server_ip'], server_port=msg['server_port'],
-                                              role=msg['agent_id'], status=STATUS_NOT_READY)
-                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                    if not node_map.exists_server(msg['server_ip'], server_port=msg['server_port']):
+                        self.server.appendNodeMap(ip=source_ip, port=source_port,
+                                                  server_ip=msg['server_ip'], server_port=msg['server_port'],
+                                                  role=msg['agent_id'], status=STATUS_NOT_READY)
+                        self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
@@ -99,6 +101,10 @@ class messageHandler(threading.Thread):
                         ip, port = server['server_ip'], server['server_port']
                         if not node_map.exists_server(ip, port):
                             self.connect(ip, port)
+                            self.server.appendNodeMap(ip=ip, port=port,
+                                                      server_ip=ip, server_port=port,
+                                                      role=server['agent_id'], status=STATUS_NOT_READY)
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']  # text
@@ -132,14 +138,16 @@ class messageHandler(threading.Thread):
                     if agent == 'B2':
                         self.b2_queue.push(msg['direction'])
 
+                elif msg_type == MESSAGE_TYPE_GAME_STATE:
+                    msg = msg['msg']
+                    self.logger.info("Received game state data.")
+                    gamestate_data = json.loads(msg)
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
 
                 elif msg_type == MESSAGE_TYPE_START_GAME:
                     # another player requires to start the game.
-                    # todo: currently anyone requires gamestart causes game start, but we should wait until all ready.
-                    print msg
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
 

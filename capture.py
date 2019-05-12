@@ -913,14 +913,14 @@ def readCommand(argv):
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
         if not val: continue
         args['myrole'] = agents_enum[index]
-        if numKeyboardAgents == 0:
-            agent = keyboardAgents.KeyboardAgent(index)
-        elif numKeyboardAgents == 1:
-            agent = keyboardAgents.KeyboardAgent2(index)
-        else:
-            raise Exception('Max of two keyboard agents supported')
-        numKeyboardAgents += 1
-        args['agents'][index] = agent
+        # if numKeyboardAgents == 0:
+        #     agent = keyboardAgents.KeyboardAgent(index)
+        # elif numKeyboardAgents == 1:
+        #     agent = keyboardAgents.KeyboardAgent2(index)
+        # else:
+        #     raise Exception('Max of two keyboard agents supported')
+        # numKeyboardAgents += 1
+        # args['agents'][index] = agent
 
     args['socket_agent'] = []
     numSocketAgents = 0
@@ -1024,7 +1024,7 @@ def replayGame(layout, agents, actions, display, length, redTeamName, blueTeamNa
     display.finish()
 
 
-def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName,
+def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName, server,
              muteAgents=False, catchExceptions=False):
     rules = CaptureRules()
     games = []
@@ -1044,6 +1044,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
             gameDisplay = display
             rules.quiet = False
         g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        server.game = g
         g.run()
         if not beQuiet: games.append(g)
 
@@ -1097,11 +1098,10 @@ if __name__ == '__main__':
     del options['ip']
     del options['port']
 
-
     socketAgentIds = options['socket_agent']
     for index in socketAgentIds:
         agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-                                         index=index, server=server)
+                                         index=index, server=server, display=options['display'])
         options['agents'][index] = agent
     del options['socket_agent']
 

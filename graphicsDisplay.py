@@ -164,6 +164,7 @@ class PacmanGraphics:
         self.gridSize = DEFAULT_GRID_SIZE * zoom
         self.capture = capture
         self.frameTime = frameTime
+        self.root_window = None
 
     def checkNullDisplay(self):
         return False
@@ -265,7 +266,7 @@ class PacmanGraphics:
         begin_graphics(screen_width,
                        screen_height,
                        BACKGROUND_COLOR,
-                       "CS188 Pacman")
+                       "CS188 Pacman", self)
 
     def drawPacman(self, pacman, index):
         position = self.getPosition(pacman)

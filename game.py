@@ -24,6 +24,7 @@ from util import *
 import time, os
 import traceback
 import sys
+import json
 
 
 #######################
@@ -106,6 +107,10 @@ class Configuration:
     def __str__(self):
         return "(x,y)=" + str(self.pos) + ", " + str(self.direction)
 
+    def json(self):
+        obj = {'direction': self.direction, 'pos': self.pos}
+        return obj
+
     def generateSuccessor(self, vector):
         """
         Generates a new configuration reached by translating the current
@@ -148,6 +153,11 @@ class AgentState:
 
     def __hash__(self):
         return hash(hash(self.configuration) + 13 * hash(self.scaredTimer))
+
+    def json(self):
+        obj = {'configuration': self.configuration.json(), 'isPacman': self.isPacman, 'numCarrying': self.numCarrying,
+               'numReturned': self.numReturned, 'scaredTimer': self.scaredTimer}
+        return obj
 
     def copy(self):
         state = AgentState(self.start, self.isPacman)
@@ -209,6 +219,10 @@ class Grid:
                     h += base
                 base *= 2
         return hash(h)
+
+    def json(self):
+        json_obj = {'data': self.data}
+        return json_obj
 
     def copy(self):
         g = Grid(self.width, self.height)
@@ -423,6 +437,11 @@ class GameStateData:
         for agentState in agentStates:
             copiedStates.append(agentState.copy())
         return copiedStates
+
+    def json(self):
+        obj = {'agentStates': list(map(lambda x: x.json(), self.agentStates)), 'food': self.food.json(),
+               'capsules': self.capsules, 'score': self.score}
+        return json.dumps(obj)
 
     def __eq__(self, other):
         """

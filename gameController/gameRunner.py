@@ -14,6 +14,7 @@ MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
 MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 SEQUENCER = "B1"
@@ -29,7 +30,7 @@ class gameRunner(threading.Thread):
         self.control_queue = server.input_queue
         self.logger = server.logger
         self.clients = []
-        self.role = options['myrole']
+        self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
@@ -90,6 +91,13 @@ class gameRunner(threading.Thread):
             elif 'ready' == msg:
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GET_READY, {"agent": self.role})
 
+            # Test: get game state
+            elif 'state' == msg:
+                data = self.server.game.state.data
+                if data is not None:
+                    message = data.json()
+                    self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, message)
+
             # End the game and kill all threads.
             # >exit
             elif 'exit' == msg:
@@ -100,7 +108,6 @@ class gameRunner(threading.Thread):
 
     def handleArrowControl(self, key):
         if not self.started:
-            print str(self.server.global_state)
             return
         try:
             time_left = 9999 if self.server.global_state is None else self.server.global_state.data.timeleft
@@ -148,6 +155,7 @@ class gameRunner(threading.Thread):
 
     def runGame(self):
         from capture import runGames, save_score
+        self.options['server'] = self.server
         games = runGames(**self.options)
         self.resetGames()
         save_score(games[0])

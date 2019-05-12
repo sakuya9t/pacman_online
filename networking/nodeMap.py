@@ -15,8 +15,10 @@ class nodeMap:
                                self.map))) > 0
 
     def exists_server(self, server_ip, server_port):
-        return len(list(filter(
-            lambda x: x['server_ip'] == server_ip and x['server_port'] == server_port, self.map))) > 0
+        for node in self.map:
+            if node['server_ip'].__eq__(server_ip) and node['server_port'] == server_port:
+                return True
+        return False
 
     def exists_agent(self, agent):
         return len(list(filter(lambda x: x['agent'] == agent, self.map))) > 0
@@ -37,7 +39,8 @@ class nodeMap:
     def get_all_servers(self):
         res = []
         for node in self.map:
-            res.append({'server_ip': node['server_ip'], 'server_port': node['server_port']})
+            res.append({'server_ip': node['server_ip'], 'server_port': node['server_port'],
+                        'agent_id': node['agent']})
         return res
 
     def get_all_nodes(self):
