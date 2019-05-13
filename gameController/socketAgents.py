@@ -49,6 +49,8 @@ class SocketAgent(Agent):
         self.server.global_state = state
         legal = state.getLegalActions(self.index)
         root_window = self.display.root_window
+        if self.server.sequencer is None:
+            self.updateGameStateAccordingtoDecision(root_window, state)
 
         while True:
             time.sleep(0.01)
@@ -72,3 +74,14 @@ class SocketAgent(Agent):
         if seq is not None and data is not None:
             data_dump = data.json()
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
+
+    def updateGameStateAccordingtoDecision(self, root_window, state):
+        curr_time = state.data.timeleft
+        decision_map = self.server.decision_map
+        while True:
+            if curr_time in decision_map.keys():
+                # todo: unpack decision and update self.server.game.state.data
+                del decision_map[curr_time]
+                break
+            root_window.update()
+            time.sleep(0.01)

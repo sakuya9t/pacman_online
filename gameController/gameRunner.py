@@ -49,7 +49,7 @@ class gameRunner(threading.Thread):
             if self.control_queue.isEmpty():
                 continue
             msg = self.control_queue.pop()
-            self.logger.info("Keyboard input: {msg}".format(msg=msg))
+            # self.logger.info("Keyboard input: {msg}".format(msg=msg))
             if 'msg' in msg.keys():
                 self.handleMessage(msg['msg'])
             elif 'key' in msg.keys():

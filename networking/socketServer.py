@@ -41,7 +41,8 @@ class socketServer(threading.Thread):
         self.sequencer_role = None
         self.game = None
         self.vote_map = {}
-        self.vote_thread = voteStateThread(self.vote_map, self.logger)
+        self.decision_map = {}
+        self.vote_thread = voteStateThread(self.vote_map, self.decision_map, self.logger)
 
     def run(self):
         self.message_handler.start()
