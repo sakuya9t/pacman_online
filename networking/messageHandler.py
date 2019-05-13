@@ -14,6 +14,9 @@ MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
+MESSAGE_TYPE_COORDINATOR = 'coordinator'
+MESSAGE_TYPE_ELECTION = 'election'
+MESSAGE_TYPE_REJECT_ELECTION = 'reject_election'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 
@@ -142,6 +145,7 @@ class messageHandler(threading.Thread):
                     msg = msg['msg']
                     self.logger.info("Received game state data.")
                     gamestate_data = json.loads(msg)
+
                 elif msg_type == MESSAGE_TYPE_NORMAL_MESSAGE:
                     self.logger.info("Received normal message from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
@@ -150,6 +154,27 @@ class messageHandler(threading.Thread):
                     # another player requires to start the game.
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
+
+                elif msg_type == MESSAGE_TYPE_COORDINATOR:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.server.sequencer_role = agent
+                    self.logger.info("New elected sequencer: {agent}".format(agent=self.server.sequencer_role))
+
+                elif msg_type == MESSAGE_TYPE_ELECTION:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.logger.info("{agent} starts election.".format(agent=str(agent)))
+                    message = {'agent': my_role}
+                    if my_role > agent:
+                        self.server.sendMsg((source_ip, source_port), MESSAGE_TYPE_REJECT_ELECTION, message)
+                        self.server.electSequencer()
+
+                elif msg_type == MESSAGE_TYPE_REJECT_ELECTION:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.logger.info("Election rejected by {agent}.".format(agent=agent))
+
 
                 else:
                     self.logger.info(msg)

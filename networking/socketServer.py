@@ -37,6 +37,7 @@ class socketServer(threading.Thread):
         self.logger = logger
         self.role = ''
         self.sequencer = None
+        self.sequencer_role = ''
         self.game = None
 
     def run(self):
@@ -105,6 +106,9 @@ class socketServer(threading.Thread):
     def createSequencer(self):
         self.sequencer = Sequencer(self.message_handler.seq_queue, self)
         self.sequencer.start()
+
+    def electSequencer(self):
+        self.input_queue.push({'msg': 'elect_sequencer'})
 
 
 class connectionRecycleThread(threading.Thread):

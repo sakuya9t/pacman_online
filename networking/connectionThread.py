@@ -12,9 +12,11 @@ class connectionThread(threading.Thread):
         self.send_queue = server.send_queue
         self.id = conn_id
         self.removeNodeMap = server.removeNodeMap
+        self.electSequencer = server.electSequencer
         self.client_ip, self.client_port = self.connection.getpeername()
         self.logger = logger
         self.alive = True
+        self.crash = False
 
     def run(self):
         # do something
@@ -32,6 +34,7 @@ class connectionThread(threading.Thread):
             except Exception as e:
                 self.logger.error("Error in connection thread with {ip}:{port}: {err}"
                                   .format(ip=self.client_ip, port=self.client_port, err=str(e)))
+                self.crash = True
                 break
         self.connection.close()
         self.complete_callback()
@@ -41,6 +44,8 @@ class connectionThread(threading.Thread):
 
     def complete_callback(self):
         self.removeNodeMap(self.client_ip, self.client_port)
+        if self.crash:
+            self.electSequencer()  # start election when process crash
         self.logger.warning("Connection with {ip}:{port} terminated."
                             .format(ip=self.client_ip, port=self.client_port))
 
