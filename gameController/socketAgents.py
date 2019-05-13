@@ -72,4 +72,3 @@ class SocketAgent(Agent):
         if seq is not None and data is not None:
             data_dump = data.json()
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
-

@@ -143,7 +143,16 @@ class messageHandler(threading.Thread):
                 elif msg_type == MESSAGE_TYPE_GAME_STATE:
                     # If received game state sent from p*, send (vi, pj) for pj != p*
                     msg = msg['msg']
-                    self.logger.info("Received game state data from general.")
+                    data = json.loads(msg)
+                    timestamp = data['timeleft']
+                    self.logger.info("Received game state data from general, timestamp: {timestamp}."
+                                     .format(timestamp=timestamp))
+                    # add decision from p* to votes
+                    vote_map = self.server.vote_map
+                    if timestamp not in vote_map.keys():
+                        vote_map[timestamp] = []
+                    vote_map[timestamp].append(data)
+                    # b-multicast (vi, pj) from p* to all other non-coordinators
                     self.server.multicastToNonSequencer(MESSAGE_TYPE_VOTE_STATE,
                                                         {'data': msg, 'agent': self.server.role})
 
@@ -154,8 +163,13 @@ class messageHandler(threading.Thread):
                 elif msg_type == MESSAGE_TYPE_VOTE_STATE:
                     msg = msg['msg']
                     data = json.loads(msg['data'])
+                    vote_map = self.server.vote_map
                     self.logger.info("Received vote state data from {peer} for timestamp {timestamp}."
                                      .format(peer=msg['agent'], timestamp=data['timeleft']))
+                    timestamp = data['timeleft']
+                    if timestamp not in vote_map.keys():
+                        vote_map[timestamp] = []
+                    vote_map[timestamp].append(data)
 
                 elif msg_type == MESSAGE_TYPE_START_GAME:
                     # another player requires to start the game.

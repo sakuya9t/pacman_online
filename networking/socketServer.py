@@ -3,6 +3,7 @@ import socket
 import time
 import json
 
+from gameController.voteStateThread import voteStateThread
 from logger import logger
 from nodeMap import nodeMap
 from connectionThread import connectionThread
@@ -39,12 +40,15 @@ class socketServer(threading.Thread):
         self.sequencer = None
         self.sequencer_role = None
         self.game = None
+        self.vote_map = {}
+        self.vote_thread = voteStateThread(self.vote_map, self.logger)
 
     def run(self):
         self.message_handler.start()
         self.send_queue_thread.start()
         self.conn_recycle_thread.start()
         self.input_handler.start()
+        self.vote_thread.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((self.ip, self.port))
         server.listen(5)
@@ -108,6 +112,7 @@ class socketServer(threading.Thread):
         self.logger.exit()
         if self.sequencer is not None:
             self.sequencer.exit()
+        self.vote_thread.join()
 
     def createSequencer(self):
         self.sequencer = Sequencer(self.message_handler.seq_queue, self)
@@ -151,7 +156,7 @@ class messageSendingQueueThread(threading.Thread):
             target_conn = list(filter(lambda x: (x.client_ip, x.client_port).__eq__(target_addr), self.pool))
             if len(target_conn) > 0:
                 target_conn[0].send(json.dumps(msg))
-            logger.info("Send message: {msg}".format(msg=msg))
+            # logger.info("Send message: {msg}".format(msg=msg))
 
     def join(self, timeout=None):
         self.alive = False
