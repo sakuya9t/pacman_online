@@ -15,7 +15,6 @@ RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
 CONTROL_BUFFER = 2
 
-
 class socketServer(threading.Thread):
     def __init__(self, serverID, bind_ip, port):
         super(socketServer, self).__init__()
@@ -39,6 +38,9 @@ class socketServer(threading.Thread):
         self.sequencer = None
         self.sequencer_role = ''
         self.game = None
+        self.role_map = None    # a dictionary, key is agent_role, value is agent_index
+        # when a socket agent crash, change the corresponding life to False
+        self.life_map = [True, True, True, True]
 
     def run(self):
         self.message_handler.start()
@@ -110,6 +112,12 @@ class socketServer(threading.Thread):
     def electSequencer(self):
         self.input_queue.push({'msg': 'elect_sequencer'})
 
+    def setDeath(self, ip, port):
+        role = self.node_map.get_role(ip, port)
+        if role is not None:
+            index = self.role_map[role]
+            #  TODO when some node reconnect, set it back to True
+            self.life_map[index] = False
 
 class connectionRecycleThread(threading.Thread):
     def __init__(self, pool):

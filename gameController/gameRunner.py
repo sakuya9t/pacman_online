@@ -34,9 +34,12 @@ class gameRunner(threading.Thread):
         self.clients = []
         self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
+        self.role_map = options['role_map'] if 'role_map' in options.keys() else None
+        self.server.role_map = self.role_map
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
+        self.delOption('role_map')
         self.msg_count = 0  # used as message id
 
     def run(self):
@@ -78,7 +81,6 @@ class gameRunner(threading.Thread):
             elif 'elect_sequencer' == msg:
                 # TODO when there is a sequencer, and new nodes join, need to tell new nodes who is sequencer
                 # TODO add a timer to election, currently just message passing
-                # TODO break while loop in game for the crash process
                 sequencer_role = self.server.sequencer_role
                 if sequencer_role not in self.server.node_map.get_all_roles() and sequencer_role != self.role:
                     self.logger.info("Start electing sequencer.")

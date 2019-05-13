@@ -52,6 +52,11 @@ class nodeMap:
             roles.append(node['agent'])
         return roles
 
+    def get_role(self, ip, port):
+        for node in self.map:
+            if node['ip'] == ip and node['port'] == port:
+                return node['agent']
+
     #   return the (ip, port) list of nodes that have a higher id than my_node
     def get_election_nodes(self, my_node):
         higher_id_node = []

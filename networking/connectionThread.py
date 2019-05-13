@@ -13,6 +13,7 @@ class connectionThread(threading.Thread):
         self.id = conn_id
         self.removeNodeMap = server.removeNodeMap
         self.electSequencer = server.electSequencer
+        self.setDeath = server.setDeath
         self.client_ip, self.client_port = self.connection.getpeername()
         self.logger = logger
         self.alive = True
@@ -34,6 +35,7 @@ class connectionThread(threading.Thread):
             except Exception as e:
                 self.logger.error("Error in connection thread with {ip}:{port}: {err}"
                                   .format(ip=self.client_ip, port=self.client_port, err=str(e)))
+                self.setDeath(self.client_ip, self.client_port)
                 self.crash = True
                 break
         self.connection.close()
