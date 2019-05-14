@@ -67,7 +67,6 @@ class messageHandler(threading.Thread):
                     if node_map.exists_agent(msg['agent_id']):
                         self.logger.info("Player {role} already exists, rejected connection."
                                          .format(role=msg['agent_id']))
-                        # todo: disconnect with corresponding node.
                         continue
 
                     # if there are already other nodes existing, send their server address to new node.
@@ -79,7 +78,7 @@ class messageHandler(threading.Thread):
                     self.server.appendNodeMap(ip=source_ip, port=source_port,
                                               server_ip=msg['server_ip'], server_port=msg['server_port'],
                                               role=msg['agent_id'], status=STATUS_NOT_READY)
-                    # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
                     self.server.sendMsg(addr=(source_ip, source_port),
                                         msg_type=MESSAGE_TYPE_CONNECT_CONFIRM,
                                         msg={'server_ip': my_serverip, 'server_port': my_serverport,
@@ -93,7 +92,7 @@ class messageHandler(threading.Thread):
                         self.server.appendNodeMap(ip=source_ip, port=source_port,
                                                   server_ip=msg['server_ip'], server_port=msg['server_port'],
                                                   role=msg['agent_id'], status=STATUS_NOT_READY)
-                        # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                        self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
                     # Some nodes are already existed, I get this message because I am connecting to one of them.
@@ -109,7 +108,7 @@ class messageHandler(threading.Thread):
                             self.server.appendNodeMap(ip=ip, port=port,
                                                       server_ip=ip, server_port=port,
                                                       role=server['agent_id'], status=STATUS_NOT_READY)
-                    # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
+                    self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']  # text
@@ -126,7 +125,7 @@ class messageHandler(threading.Thread):
                     msg = msg['msg']
                     msg_id = msg['msg_id']
                     g_seq = msg['group_sequence']
-                    self.logger.info("{message}".format(message=msg))
+                    # self.logger.info("{message}".format(message=msg))
                     msg_id = tuple(msg_id)
                     self.arrived_g_seq.update({g_seq: msg_id})
                     self.deliver()
@@ -151,10 +150,15 @@ class messageHandler(threading.Thread):
                     self.logger.info("Received game state data from general, timestamp: {timestamp}."
                                      .format(timestamp=timestamp))
                     # add decision from p* to votes
+                    lock = self.server.vote_map_lock
                     vote_map = self.server.vote_map
-                    if timestamp not in vote_map.keys():
-                        vote_map[timestamp] = []
-                    vote_map[timestamp].append(data)
+                    lock.acquire()
+                    try:
+                        if timestamp not in vote_map.keys():
+                            vote_map[timestamp] = []
+                        vote_map[timestamp].append(data)
+                    finally:
+                        lock.release()
                     # b-multicast (vi, pj) from p* to all other non-coordinators
                     self.server.multicastToNonSequencer(MESSAGE_TYPE_VOTE_STATE,
                                                         {'data': msg, 'agent': self.server.role})
@@ -166,13 +170,18 @@ class messageHandler(threading.Thread):
                 elif msg_type == MESSAGE_TYPE_VOTE_STATE:
                     msg = msg['msg']
                     data = json.loads(msg['data'])
+                    lock = self.server.vote_map_lock
                     vote_map = self.server.vote_map
                     self.logger.info("Received vote state data from {peer} for timestamp {timestamp}."
                                      .format(peer=msg['agent'], timestamp=data['timeleft']))
                     timestamp = data['timeleft']
-                    if timestamp not in vote_map.keys():
-                        vote_map[timestamp] = []
-                    vote_map[timestamp].append(data)
+                    lock.acquire()
+                    try:
+                        if timestamp not in vote_map.keys():
+                            vote_map[timestamp] = []
+                        vote_map[timestamp].append(data)
+                    finally:
+                        lock.release()
 
                 elif msg_type == MESSAGE_TYPE_START_GAME:
                     # another player requires to start the game.
@@ -198,7 +207,6 @@ class messageHandler(threading.Thread):
                     msg = msg['msg']
                     agent = msg['agent']
                     self.logger.info("Election rejected by {agent}.".format(agent=agent))
-
 
                 else:
                     self.logger.info(msg)

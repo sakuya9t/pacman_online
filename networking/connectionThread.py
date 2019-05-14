@@ -35,8 +35,6 @@ class connectionThread(threading.Thread):
             except Exception as e:
                 self.logger.error("Error in connection thread with {ip}:{port}: {err}"
                                   .format(ip=self.client_ip, port=self.client_port, err=str(e)))
-                self.setDeath(self.client_ip, self.client_port)
-                self.crash = True
                 break
         self.connection.close()
         self.complete_callback()
@@ -45,6 +43,8 @@ class connectionThread(threading.Thread):
         self.connection.sendall(message)
 
     def complete_callback(self):
+        self.setDeath(self.client_ip, self.client_port)
+        self.crash = True
         self.removeNodeMap(self.client_ip, self.client_port)
         if self.crash:
             self.electSequencer()  # start election when process crash

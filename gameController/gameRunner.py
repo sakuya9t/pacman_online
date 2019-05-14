@@ -32,12 +32,12 @@ class gameRunner(threading.Thread):
         self.control_queue = server.input_queue
         self.logger = server.logger
         self.clients = []
-        self.display = options['display']
         self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
         self.role_map = options['role_map'] if 'role_map' in options.keys() else None
         self.server.role_map = self.role_map
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
+        self.server.display = options['display']
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
         self.delOption('role_map')

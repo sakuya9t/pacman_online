@@ -57,7 +57,7 @@ class nodeMap:
             if node['ip'] == ip and node['port'] == port:
                 return node['agent']
 
-    #   return the (ip, port) list of nodes that have a higher id than my_node
+    # return the (ip, port) list of nodes that have a higher id than my_node
     def get_election_nodes(self, my_node):
         higher_id_node = []
         for node in self.map:
@@ -66,3 +66,7 @@ class nodeMap:
                 ip, port = node['ip'], node['port']
                 higher_id_node.append((ip, port))
         return higher_id_node
+
+    # get how many nodes are connected to current node.
+    def size(self):
+        return len(self.map)

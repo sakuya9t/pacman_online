@@ -48,10 +48,10 @@ class SocketAgent(Agent):
     def getAction(self, state):
         self.multicastGameState()
         self.server.global_state = state
-        legal = state.getLegalActions(self.index)
         root_window = self.display.root_window
         if self.server.sequencer is None:
             self.updateGameStateAccordingtoDecision(root_window, state)
+        legal = self.server.game.state.getLegalActions(self.index)
 
         move = Directions.STOP
         while True and self.life_map[self.index]:
@@ -80,10 +80,33 @@ class SocketAgent(Agent):
     def updateGameStateAccordingtoDecision(self, root_window, state):
         curr_time = state.data.timeleft
         decision_map = self.server.decision_map
+        count = 0
         while True:
+            # if timeout in 2 seconds, no synchronize
+            if count > 200:
+                break
             if curr_time in decision_map.keys():
-                # todo: unpack decision and update self.server.game.state.data
+                # unpack decision and update self.server.game.state.data
+                data = self.server.game.state.data
+                received_data = decision_map[curr_time]
+                data.score = received_data['score']
+                data.timeleft = received_data['timeleft']
+                data.food.data = received_data['food']['data']
+                data.capsules = received_data['capsules']
+                data._agentMoved = received_data['agentMoved']
+                for agent_id in range(4):
+                    agent_state = data.agentStates[agent_id]
+                    recv_agent_state = received_data['agentStates'][agent_id]
+                    agent_state.isPacman = recv_agent_state['isPacman']
+                    agent_state.scaredTimer = recv_agent_state['scaredTimer']
+                    agent_state.numCarrying = recv_agent_state['numCarrying']
+                    agent_state.numReturned = recv_agent_state['numReturned']
+                    agent_state.configuration.direction = recv_agent_state['configuration']['direction']
+                    agent_state.configuration.pos = recv_agent_state['configuration']['pos']
+                if data._agentMoved is not None:
+                    self.server.display.update(data)
                 del decision_map[curr_time]
                 break
             root_window.update()
             time.sleep(0.01)
+            count += 1
