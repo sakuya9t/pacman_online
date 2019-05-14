@@ -182,6 +182,6 @@ def generateServerID(port_num):
 if __name__ == '__main__':
     from networking.inputHandler import inputHandler
     server = socketServer(0, "0.0.0.0", 8080)
-    input_handler = inputHandler(server, False)
+    input_handler = inputHandler(server)
     server.start()
     input_handler.start()
