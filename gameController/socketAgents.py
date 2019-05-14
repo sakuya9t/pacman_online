@@ -24,6 +24,7 @@ class SocketAgent(Agent):
         self.display = display
         self.state = None
         self.ready = False
+        self.life_map = self.server.life_map
         thread.start_new_thread(self.constantReceiver, ())
 
     def constantReceiver(self):
@@ -52,7 +53,8 @@ class SocketAgent(Agent):
         if self.server.sequencer is None:
             self.updateGameStateAccordingtoDecision(root_window, state)
 
-        while True:
+        move = Directions.STOP
+        while True and self.life_map[self.index]:
             time.sleep(0.01)
             root_window.update()
             if self.recvDirection == "":

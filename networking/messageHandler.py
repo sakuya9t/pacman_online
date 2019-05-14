@@ -15,6 +15,9 @@ MESSAGE_TYPE_HOLDBACK = 'holdback'
 MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 MESSAGE_TYPE_VOTE_STATE = 'vote_state'
+MESSAGE_TYPE_COORDINATOR = 'coordinator'
+MESSAGE_TYPE_ELECTION = 'election'
+MESSAGE_TYPE_REJECT_ELECTION = 'reject_election'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 
@@ -175,6 +178,27 @@ class messageHandler(threading.Thread):
                     # another player requires to start the game.
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
+
+                elif msg_type == MESSAGE_TYPE_COORDINATOR:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.server.sequencer_role = agent
+                    self.logger.info("New elected sequencer: {agent}".format(agent=self.server.sequencer_role))
+
+                elif msg_type == MESSAGE_TYPE_ELECTION:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.logger.info("{agent} starts election.".format(agent=str(agent)))
+                    message = {'agent': my_role}
+                    if my_role > agent:
+                        self.server.sendMsg((source_ip, source_port), MESSAGE_TYPE_REJECT_ELECTION, message)
+                        self.server.electSequencer()
+
+                elif msg_type == MESSAGE_TYPE_REJECT_ELECTION:
+                    msg = msg['msg']
+                    agent = msg['agent']
+                    self.logger.info("Election rejected by {agent}.".format(agent=agent))
+
 
                 else:
                     self.logger.info(msg)

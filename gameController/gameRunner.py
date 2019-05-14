@@ -15,6 +15,8 @@ MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
 MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
 MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
+MESSAGE_TYPE_COORDINATOR = 'coordinator'
+MESSAGE_TYPE_ELECTION = 'election'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
 SEQUENCER = "B1"
@@ -33,15 +35,13 @@ class gameRunner(threading.Thread):
         self.display = options['display']
         self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
+        self.role_map = options['role_map'] if 'role_map' in options.keys() else None
+        self.server.role_map = self.role_map
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
+        self.delOption('role_map')
         self.msg_count = 0  # used as message id
-        self.server.sequencer_role = SEQUENCER
-        # make B1 the sequencer
-        if self.server.role == SEQUENCER:
-            print "I am sequencer"
-            self.server.createSequencer()
 
     def run(self):
         while self.alive:
@@ -60,13 +60,45 @@ class gameRunner(threading.Thread):
     def handleMessage(self, msg):
         try:
             # >gamestart
-            if msg == 'gamestart':
+            if 'gamestart' == msg:
                 if self.started:
                     return
-                thread.start_new_thread(self.runGame, ())
+
                 message = {"agent": self.role}
+
+                self.server.electSequencer()
+                # make B1 the sequencer
+                # if self.server.role == SEQUENCER:
+                #     print "I am sequencer"
+                #     self.server.createSequencer()
+                #     self.server.sequencer_role = self.role
+                #     self.server.sendToAllOtherPlayers(MESSAGE_TYPE_COORDINATOR, message)
+
+                thread.start_new_thread(self.runGame, ())
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
+
+            # >elect_sequencer    or    after gamestart     or     a process fail
+            elif 'elect_sequencer' == msg:
+                # TODO when there is a sequencer, and new nodes join, need to tell new nodes who is sequencer
+                # TODO add a timer to election, currently just message passing
+                sequencer_role = self.server.sequencer_role
+                if sequencer_role not in self.server.node_map.get_all_roles() and sequencer_role != self.role:
+                    self.logger.info("Start electing sequencer.")
+                    self.server.message_handler.resetGames()
+                    higher_id_node = self.server.node_map.get_election_nodes(self.role)
+                    message = {"agent": self.role}
+                    if not higher_id_node:
+                        self.logger.info("I am sequencer")
+                        self.server.createSequencer()
+                        self.server.sequencer_role = self.role
+                        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_COORDINATOR, message)
+                    else:
+                        for address in higher_id_node:
+                            self.server.sendMsg(address, MESSAGE_TYPE_ELECTION, message)
+                        # self.server.startElectionTimer(5)
+
+
 
             # >connect 127.0.0.1 8080
             elif 'connect' in msg:

@@ -908,9 +908,11 @@ def readCommand(argv):
     blueAgents = loadAgents(False, options.blue, nokeyboard, blueArgs)
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
+    role_map = {}
     numKeyboardAgents = 0
     agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
+        role_map.update({agents_enum[index]: index})
         if not val: continue
         args['myrole'] = agents_enum[index]
         # if numKeyboardAgents == 0:
@@ -921,6 +923,7 @@ def readCommand(argv):
         #     raise Exception('Max of two keyboard agents supported')
         # numKeyboardAgents += 1
         # args['agents'][index] = agent
+    args['role_map'] = role_map
 
     args['socket_agent'] = []
     numSocketAgents = 0
