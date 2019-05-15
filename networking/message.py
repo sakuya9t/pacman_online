@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import json
 SRC_IP = "ip"
 SRC_PORT = "port"

@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import threading
 import json
 import time
@@ -23,11 +26,19 @@ STATUS_NOT_READY = 'not_ready'
 
 
 class messageHandler(threading.Thread):
+    """
+    this thread is responsible for dealing with the messages received
+    from the socket.
+    """
     def __init__(self, server, recv_buf, send_buf, logger):
         super(messageHandler, self).__init__()
         self.server = server
         self.recv_buf = recv_buf
         self.send_buf = send_buf
+
+        # action queues
+        # when control messages are ready to deliver, they will
+        # be pushed into the corresponding agent's queue.
         self.r1_queue = Queue()
         self.r2_queue = Queue()
         self.b1_queue = Queue()
@@ -111,6 +122,8 @@ class messageHandler(threading.Thread):
                                                       role=server['agent_id'], status=STATUS_NOT_READY)
                     # self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
+                # For every processes, put the message into the holdback queue.
+                # For sequencer process, also put the message into sequencer queue.
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']  # text
                     self.logger.info("{message}".format(message=msg))
@@ -122,6 +135,8 @@ class messageHandler(threading.Thread):
                         priority = - time_left
                         self.seq_queue.push(msg_id, priority)
 
+                # Put the message in the arrived queue and deliver acoording to
+                # group sequence number.
                 elif msg_type == MESSAGE_TYPE_CONTROL_AGENT:
                     msg = msg['msg']
                     msg_id = msg['msg_id']
@@ -131,6 +146,7 @@ class messageHandler(threading.Thread):
                     self.arrived_g_seq.update({g_seq: msg_id})
                     self.deliver()
 
+                # a control message not organized by the sequencer
                 elif msg_type == MESSAGE_TYPE_NO_ORDER_CONTROL:
                     msg = msg['msg']
                     agent = msg['agent'].upper()
@@ -179,12 +195,15 @@ class messageHandler(threading.Thread):
                     control_buf = self.server.input_queue
                     control_buf.push({'msg': 'gamestart'})
 
+                # record the elected sequencer
                 elif msg_type == MESSAGE_TYPE_COORDINATOR:
                     msg = msg['msg']
                     agent = msg['agent']
                     self.server.sequencer_role = agent
                     self.logger.info("New elected sequencer: {agent}".format(agent=self.server.sequencer_role))
 
+                # this is received when a lower id process wants to bid for the sequencer.
+                # Reject it and starts an election ourselves.
                 elif msg_type == MESSAGE_TYPE_ELECTION:
                     msg = msg['msg']
                     agent = msg['agent']
@@ -194,6 +213,8 @@ class messageHandler(threading.Thread):
                         self.server.sendMsg((source_ip, source_port), MESSAGE_TYPE_REJECT_ELECTION, message)
                         self.server.electSequencer()
 
+                # this is received when our election is rejected.
+                # Stop the timer (not implemented) and wait for COORDINATOR message
                 elif msg_type == MESSAGE_TYPE_REJECT_ELECTION:
                     msg = msg['msg']
                     agent = msg['agent']
@@ -210,7 +231,9 @@ class messageHandler(threading.Thread):
     def join(self, timeout=None):
         self.alive = False
         threading.Thread.join(self, timeout)
-        
+
+    # deliver the message when process sequence number equals to group sequence number.
+    # If the group sequence number does not arrive, break and wait for the next message.
     def deliver(self):
         while self.p_seq in self.arrived_g_seq:
             msg_id = self.arrived_g_seq[self.p_seq]

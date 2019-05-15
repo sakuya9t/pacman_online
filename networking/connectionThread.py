@@ -1,9 +1,15 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import socket
 import threading
 import time
 
 
 class connectionThread(threading.Thread):
+    """
+    connectionThread is the thread used to maintain the socket with a client
+    """
     def __init__(self, conn_id, connection, server, logger):
         super(connectionThread, self).__init__()
         self.connection = connection

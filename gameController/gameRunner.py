@@ -1,10 +1,17 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# gameRunner.py contains the main logic for our distributed system to run. It is
+# responsible for connection, game start, election of sequencer, and sending agent
+# control message during the game.
+
 import json
 import thread
 import threading
 import time
 import os
 
-
+# message types for the distributed algorithms
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
@@ -19,7 +26,6 @@ MESSAGE_TYPE_COORDINATOR = 'coordinator'
 MESSAGE_TYPE_ELECTION = 'election'
 STATUS_READY = 'ready'
 STATUS_NOT_READY = 'not_ready'
-SEQUENCER = "B1"
 
 
 class gameRunner(threading.Thread):
@@ -65,24 +71,16 @@ class gameRunner(threading.Thread):
                     return
 
                 message = {"agent": self.role}
-
                 self.server.electSequencer()
-                # make B1 the sequencer
-                # if self.server.role == SEQUENCER:
-                #     print "I am sequencer"
-                #     self.server.createSequencer()
-                #     self.server.sequencer_role = self.role
-                #     self.server.sendToAllOtherPlayers(MESSAGE_TYPE_COORDINATOR, message)
-
                 thread.start_new_thread(self.runGame, ())
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
 
             # >elect_sequencer    or    after gamestart     or     a process fail
             elif 'elect_sequencer' == msg:
-                # TODO when there is a sequencer, and new nodes join, need to tell new nodes who is sequencer
-                # TODO add a timer to election, currently just message passing
                 sequencer_role = self.server.sequencer_role
+                # if this process has the highest identifier, create Sequencer object and broadcast COORDINATOR
+                # message. Otherwise, send ELECTION messages to the higher_id_node to bid for coordinator.
                 if sequencer_role not in self.server.node_map.get_all_roles() and sequencer_role != self.role:
                     self.logger.info("Start electing sequencer.")
                     self.server.message_handler.resetGames()
@@ -96,9 +94,6 @@ class gameRunner(threading.Thread):
                     else:
                         for address in higher_id_node:
                             self.server.sendMsg(address, MESSAGE_TYPE_ELECTION, message)
-                        # self.server.startElectionTimer(5)
-
-
 
             # >connect 127.0.0.1 8080
             elif 'connect' in msg:
@@ -198,6 +193,7 @@ class gameRunner(threading.Thread):
         self.resetGames()
         save_score(games[0])
 
+    # a fake control message send to myself
     def makeFakeControlMessage(self, message):
         # return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_HOLDBACK, 'msg': message})}

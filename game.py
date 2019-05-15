@@ -20,6 +20,13 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# The pacman project is transformed into a distributed, peer-to-peer game system
+# where multiple keyboard (human) agents can compete against each other over the network.
+# The game logic of this file is slightly modified to cope with our system.
+
 from util import *
 import time, os
 import traceback

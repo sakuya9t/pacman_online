@@ -1,4 +1,10 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 class nodeMap:
+    """
+    a class that contains all the information of the nodes in the current P2P connection
+    """
     def __init__(self):
         self.map = []
 

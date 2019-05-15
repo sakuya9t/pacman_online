@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import thread
 import time
 
@@ -45,6 +48,10 @@ class SocketAgent(Agent):
             self.ready = True
             time.sleep(0.1)
 
+    # returns the action of self.recvDirection
+    # if no message is received and the corresponding process is not dead,
+    # getAction will hold and wait until a message is received. This will
+    # stuck the while loop in game.py so that other players cannot move.
     def getAction(self, state):
         self.multicastGameState()
         self.server.global_state = state
@@ -54,6 +61,9 @@ class SocketAgent(Agent):
             self.updateGameStateAccordingtoDecision(root_window, state)
 
         move = Directions.STOP
+
+        # if life_map is false, means that the process that controls
+        # this agent has crashed. getAction will return Directions.STOP
         while True and self.life_map[self.index]:
             time.sleep(0.01)
             root_window.update()

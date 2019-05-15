@@ -20,6 +20,16 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
+
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# The pacman project is transformed into a distributed, peer-to-peer game system
+# where multiple keyboard (human) agents can compete against each other over the network.
+# To minimize the change to the original game rules logic, the main role of this file
+# is only to create the Server thread and the GameRunner thread. The GameThread maintains
+# the logic for our P2P system to run.
+
 """
 Capture.py holds the logic for Pacman capture the flag.
 

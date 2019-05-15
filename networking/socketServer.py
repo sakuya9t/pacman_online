@@ -1,3 +1,10 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# This file contains the Server class of each nodes in the connections. It maintains
+# all the threads and variables necessary for our system. It also is responsible for
+# the message passing logic of our system.
+
 import threading
 import socket
 import time
@@ -17,6 +24,9 @@ SEND_BUFFER = 1
 CONTROL_BUFFER = 2
 
 class socketServer(threading.Thread):
+    """
+    The server of each process.
+    """
     def __init__(self, serverID, bind_ip, port):
         super(socketServer, self).__init__()
         self.serverID = serverID
@@ -121,9 +131,12 @@ class socketServer(threading.Thread):
         self.sequencer = Sequencer(self.message_handler.seq_queue, self)
         self.sequencer.start()
 
+    # start an election
     def electSequencer(self):
         self.input_queue.push({'msg': 'elect_sequencer'})
 
+    # if a node crashed, change its corresponding life map to False,
+    # so that the game can continue.
     def setDeath(self, ip, port):
         role = self.node_map.get_role(ip, port)
         if role is not None:
@@ -132,6 +145,9 @@ class socketServer(threading.Thread):
             self.life_map[index] = False
 
 class connectionRecycleThread(threading.Thread):
+    """
+    recycle the dead connections
+    """
     def __init__(self, pool):
         super(connectionRecycleThread, self).__init__()
         self.pool = pool
@@ -151,6 +167,9 @@ class connectionRecycleThread(threading.Thread):
 
 
 class messageSendingQueueThread(threading.Thread):
+    """
+    the thread responsible for sending messages
+    """
     def __init__(self, queue, buf_type, pool):
         super(messageSendingQueueThread, self).__init__()
         self.queue = queue
