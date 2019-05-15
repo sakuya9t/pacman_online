@@ -230,12 +230,10 @@ class messageHandler(threading.Thread):
                     self.logger.info("Election rejected by {agent}.".format(agent=agent))
 
                 else:
-                    print 'a'
-                    self.logger.info(msg)
+                    self.logger.info("Received other message: {msg}".format(msg=msg))
 
             except Exception as e:
-                print(msg)
-                self.logger.error(str(e))
+                self.logger.error(str(msg) + ", Error: " + str(e))
 
     def join(self, timeout=None):
         self.alive = False

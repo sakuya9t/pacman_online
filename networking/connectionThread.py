@@ -29,7 +29,7 @@ class connectionThread(threading.Thread):
         # do something
         while self.alive:
             try:
-                message = self.connection.recv(1024)
+                message = self.connection.recv(4096)
                 if not message:
                     break
                 self.recv_queue.push({"ip": self.client_ip, "port": self.client_port,
@@ -47,7 +47,7 @@ class connectionThread(threading.Thread):
 
     def send(self, message):
         try:
-            self.connection.send(message)
+            self.connection.sendall(message)
         except Exception as e:
             self.logger.err("Send message error: " + str(e))
 
