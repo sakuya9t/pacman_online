@@ -68,8 +68,9 @@ class socketServer(threading.Thread):
         self.vote_thread.start()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((self.ip, self.port))
-        server.listen(5)
-        logger.info("Server listening on {ip}:{port}".format(ip=self.ip, port=self.port))
+        server.listen(10)
+        if self.alive:
+            logger.info("Server listening on {ip}:{port}".format(ip=self.ip, port=self.port))
         while self.alive:
             connection, addr = server.accept()
             self.passiveConnect(connection, addr)
@@ -96,7 +97,8 @@ class socketServer(threading.Thread):
         target_ip, target_port = addr
         msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
         # print str(self.global_state.getRedFood().list())
-        self.send_queue.push(msg_packet)
+        if msg_packet is not None and json.dumps(msg_packet) != "[]":
+            self.send_queue.push(msg_packet)
 
     def sendToAllOtherPlayers(self, msg_type, msg):
         # logger.info("Send message to all other players: {msg}".format(msg=msg))
@@ -120,6 +122,7 @@ class socketServer(threading.Thread):
         self.node_map.remove(ip, port)
 
     def join(self, timeout=None):
+        self.logger.info("Server terminating...")
         self.alive = False
         self.message_handler.join()
         self.input_handler.join()
@@ -183,8 +186,8 @@ class messageSendingQueueThread(threading.Thread):
 
     def run(self):
         while self.alive:
-            time.sleep(0.05)
             if self.queue.isEmpty():
+                time.sleep(0.5)
                 continue
             msg = self.queue.pop()
             target_addr = (msg['ip'], msg['port'])

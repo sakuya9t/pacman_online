@@ -55,7 +55,7 @@ class messageHandler(threading.Thread):
 
     def run(self):
         while self.alive:
-            time.sleep(0.1)
+            time.sleep(0.05)
             if self.recv_buf.isEmpty():
                 continue
             msg = self.recv_buf.pop()

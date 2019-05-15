@@ -172,10 +172,6 @@ class gameRunner(threading.Thread):
                             msg_type=MESSAGE_TYPE_EXISTING_NODES,
                             msg=existing_server_list)
 
-    def updateStateToDisplay(self):
-        self.display.update(self.server.game.state)
-        self.logger.info("Updated new game state to game UI.")
-
     def join(self, timeout=None):
         self.alive = False
 

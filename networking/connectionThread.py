@@ -29,7 +29,7 @@ class connectionThread(threading.Thread):
         # do something
         while self.alive:
             try:
-                message = self.connection.recv(16384)
+                message = self.connection.recv(1024)
                 if not message:
                     break
                 self.recv_queue.push({"ip": self.client_ip, "port": self.client_port,
@@ -46,7 +46,10 @@ class connectionThread(threading.Thread):
         self.complete_callback()
 
     def send(self, message):
-        self.connection.sendall(message)
+        try:
+            self.connection.send(message)
+        except Exception as e:
+            self.logger.err("Send message error: " + str(e))
 
     def complete_callback(self):
         self.setDeath(self.client_ip, self.client_port)
