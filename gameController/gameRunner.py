@@ -1,3 +1,10 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# gameRunner.py contains the main logic for our distributed system to run. It is
+# responsible for connection, game start, election of sequencer, and sending agent
+# control message during the game.
+
 import json
 import thread
 import threading
@@ -5,12 +12,21 @@ import time
 import os
 import graphicsUtils
 
+# message types for the distributed algorithms
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
 MESSAGE_TYPE_CONNECT_CONFIRM = 'cli_conn_ack'
 MESSAGE_TYPE_START_GAME = 'start_game'
+MESSAGE_TYPE_HOLDBACK = 'holdback'
+MESSAGE_TYPE_NO_ORDER_CONTROL = 'no_order_control'
 MESSAGE_TYPE_GET_READY = 'get_ready'
+MESSAGE_TYPE_EXISTING_NODES = 'nodes_list'
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
+MESSAGE_TYPE_COORDINATOR = 'coordinator'
+MESSAGE_TYPE_ELECTION = 'election'
+STATUS_READY = 'ready'
+STATUS_NOT_READY = 'not_ready'
 
 
 class gameRunner(threading.Thread):
@@ -23,11 +39,16 @@ class gameRunner(threading.Thread):
         self.control_queue = server.input_queue
         self.logger = server.logger
         self.clients = []
-        self.role = options['myrole']
+        self.role = options['myrole'] if 'myrole' in options.keys() else ''
         self.server.role = self.role
+        self.role_map = options['role_map'] if 'role_map' in options.keys() else None
+        self.server.role_map = self.role_map
         self.server.input_handler.setEnabled(not options['keyboard_disabled'])
+        self.server.display = options['display']
         self.delOption('keyboard_disabled')
         self.delOption('myrole')
+        self.delOption('role_map')
+        self.msg_count = 0  # used as message id
 
     def run(self):
         while self.alive:
@@ -46,17 +67,34 @@ class gameRunner(threading.Thread):
     def handleMessage(self, msg):
         try:
             # >gamestart
-            if msg == 'gamestart':
+            if 'gamestart' == msg:
                 if self.started:
                     return
 
                 message = {"agent": self.role}
+                self.server.electSequencer()
+                thread.start_new_thread(self.runGame, ())
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_START_GAME, message)
                 self.started = True
 
-                # Changed to call runGame in main thread
-                graphicsUtils.runNetworkGame(self.server, self.options)
-                # thread.start_new_thread(self.runGame, ())
+            # >elect_sequencer    or    after gamestart     or     a process fail
+            elif 'elect_sequencer' == msg:
+                sequencer_role = self.server.sequencer_role
+                # if this process has the highest identifier, create Sequencer object and broadcast COORDINATOR
+                # message. Otherwise, send ELECTION messages to the higher_id_node to bid for coordinator.
+                if sequencer_role not in self.server.node_map.get_all_roles() and sequencer_role != self.role:
+                    self.logger.info("Start electing sequencer.")
+                    self.server.message_handler.resetGames()
+                    higher_id_node = self.server.node_map.get_election_nodes(self.role)
+                    message = {"agent": self.role}
+                    if not higher_id_node:
+                        self.logger.info("I am sequencer")
+                        self.server.createSequencer()
+                        self.server.sequencer_role = self.role
+                        self.server.sendToAllOtherPlayers(MESSAGE_TYPE_COORDINATOR, message)
+                    else:
+                        for address in higher_id_node:
+                            self.server.sendMsg(address, MESSAGE_TYPE_ELECTION, message)
 
             # >connect 127.0.0.1 8080
             elif 'connect' in msg:
@@ -79,6 +117,17 @@ class gameRunner(threading.Thread):
                 args = msg.split(' ')
                 self.server.sendMsg((args[1], args[2]), MESSAGE_TYPE_NORMAL_MESSAGE, args[3])
 
+            # > get ready for the game.
+            elif 'ready' == msg:
+                self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GET_READY, {"agent": self.role})
+
+            # Test: get game state
+            elif 'state' == msg:
+                data = self.server.game.state.data
+                if data is not None:
+                    message = data.json()
+                    self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, message)
+
             # End the game and kill all threads.
             # >exit
             elif 'exit' == msg:
@@ -91,17 +140,42 @@ class gameRunner(threading.Thread):
         if not self.started:
             return
         try:
-            message = {"agent": self.role, "direction": key,
-                       "server_info": {"ip": self.server.ip, "port": self.server.port}}
-            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_CONTROL_AGENT, message)
+            time_left = 9999 if self.server.global_state is None else self.server.global_state.data.timeleft
+
+            # synchronized
+            message = {"agent": self.role, "direction": key, "time_left": time_left,
+                       "server_info": {"ip": self.server.ip, "port": self.server.port},
+                       "msg_count": self.msg_count}
             self.server.recv_queue.push(self.makeFakeControlMessage(message))
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_HOLDBACK, message)
+
+            # unsynchronized
+            # message = {"agent": self.role, "direction": key,
+            #            "server_info": {"ip": self.server.ip, "port": self.server.port}}
+            # self.server.recv_queue.push({'ip': 'me', 'port': 'me',
+            #                             'message': json.dumps({'type': MESSAGE_TYPE_NO_ORDER_CONTROL,
+            #                                                    'msg': message})})
+            # self.server.sendToAllOtherPlayers(MESSAGE_TYPE_NO_ORDER_CONTROL, message)
+
+            self.msg_count += 1
         except Exception as e:
             self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
 
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
+        existing_server_list = self.server.node_map.get_all_servers()
         # First send a message to tell the target server our server info
-        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER, {'agent_id': self.role})
+        my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.role
+        self.server.sendMsg((ip, port), MESSAGE_TYPE_CONNECT_TO_SERVER,
+                            {'server_ip': my_serverip, 'server_port': my_serverport, 'agent_id': my_role})
+        # Then send a message to request target server connect to all servers we have connected to.
+        self.server.sendMsg(addr=(ip, port),
+                            msg_type=MESSAGE_TYPE_EXISTING_NODES,
+                            msg=existing_server_list)
+
+    def updateStateToDisplay(self):
+        self.display.update(self.server.game.state)
+        self.logger.info("Updated new game state to game UI.")
 
     def join(self, timeout=None):
         self.alive = False
@@ -113,14 +187,22 @@ class gameRunner(threading.Thread):
         if key in list(self.options.keys()):
             del self.options[key]
 
-    # def runGame(self):
-    #     from capture import runGames, save_score
-    #     games = runGames(**self.options)
-    #     self.started = False
-    #     save_score(games[0])
+    def runGame(self):
+        from capture import runGames, save_score
+        self.options['server'] = self.server
+        games = runGames(**self.options)
+        self.resetGames()
+        save_score(games[0])
 
-    def stopGame(self):
-        self.started = False
-
+    # a fake control message send to myself
     def makeFakeControlMessage(self, message):
-        return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
+        # return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
+        return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_HOLDBACK, 'msg': message})}
+
+    def resetGames(self):
+        self.started = False
+        self.msg_count = 0
+        self.server.global_state = None
+        self.server.message_handler.resetGames()
+        if self.server.sequencer is not None:
+            self.server.sequencer.resetGames()

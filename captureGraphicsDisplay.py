@@ -215,6 +215,7 @@ class PacmanGraphics(Screen):
         self.frameTime = frameTime
         self.redTeam = redTeam
         self.blueTeam = blueTeam
+        self.root_window = None
 
     def initialize(self, state, isBlue = False):
         self.isBlue = isBlue
@@ -321,11 +322,18 @@ class PacmanGraphics(Screen):
         screen_width = 2*self.gridSize + grid_width
         screen_height = 2*self.gridSize + grid_height + INFO_PANE_HEIGHT
 
+<<<<<<< HEAD
         clear_screen()
         # begin_graphics(screen_width,
         #                screen_height,
         #                BACKGROUND_COLOR,
         #                "CS188 Pacman")
+=======
+        begin_graphics(screen_width,
+                       screen_height,
+                       BACKGROUND_COLOR,
+                       "CS188 Pacman", self)
+>>>>>>> feature/network_layer
 
     def drawPacman(self, pacman, index):
         position = self.getPosition(pacman)

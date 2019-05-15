@@ -273,7 +273,7 @@ def show_graphics():
     global _root_window
     _root_window.deiconify()
 
-def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None):
+def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None, graphics_interface=None):
     global _root_window, _canvas, _canvas_x, _canvas_y, _canvas_xs, _canvas_ys, _bg_color
 
     # Check for duplicate call
@@ -301,6 +301,8 @@ def begin_graphics(width=640, height=480, color=formatColor(0, 0, 0), title=None
     except:
         _root_window = None
         raise
+
+    graphics_interface.root_window = _root_window
 
     # Bind to key-down and key-up events
     _root_window.bind("<KeyPress>", _keypress)

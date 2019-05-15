@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,3 +103,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+=======
+/score
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/pacman_online.iml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/venv
+*.pyc
+>>>>>>> feature/network_layer

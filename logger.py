@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import datetime
 import threading
 
@@ -5,6 +8,9 @@ from util import Queue
 
 
 class logger(threading.Thread):
+    """
+    This thread is responsible for logging messages
+    """
     def __init__(self):
         super(logger, self).__init__()
         self.buffer = Queue()
@@ -33,8 +39,9 @@ class logger(threading.Thread):
         message = str(message)
         self.buffer.push("\033[93m (WARNING) {time} {message}".format(time=time, message=message))
 
-    def join(self, timeout=None):
+    def exit(self):
         self.alive = False
+
 
 logger = logger()
 logger.start()

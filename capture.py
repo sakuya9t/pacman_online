@@ -20,6 +20,16 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
+
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+#
+# The pacman project is transformed into a distributed, peer-to-peer game system
+# where multiple keyboard (human) agents can compete against each other over the network.
+# To minimize the change to the original game rules logic, the main role of this file
+# is only to create the Server thread and the GameRunner thread. The GameThread maintains
+# the logic for our P2P system to run.
+
 """
 Capture.py holds the logic for Pacman capture the flag.
 
@@ -379,12 +389,12 @@ class CaptureRules:
     def __init__(self, quiet=False):
         self.quiet = quiet
 
-    def newGame(self, layout, agents, display, length, muteAgents, catchExceptions):
+    def newGame(self, layout, agents, display, length, server, muteAgents, catchExceptions):
         initState = GameState()
         initState.initialize(layout, len(agents))
         starter = random.randint(0, 1)
         print('%s team starts' % ['Red', 'Blue'][starter])
-        game = Game(agents, display, self, startingIndex=starter, muteAgents=muteAgents,
+        game = Game(agents, display, self, server, startingIndex=starter, muteAgents=muteAgents,
                     catchExceptions=catchExceptions)
         game.state = initState
         game.length = length
@@ -853,8 +863,9 @@ def readCommand(argv):
                       help=default('How many episodes are training (suppresses output)'), default=0)
     parser.add_option('-c', '--catchExceptions', action='store_true', default=False,
                       help='Catch exceptions and enforce time limits')
+    parser.add_option('--ip', dest='ip', help=default('Ip address for server'), default='0.0.0.0')
     parser.add_option('--port', dest='port', type='int',
-                      help=default('Port number of game receiver'), default=8080)
+                      help=default('Port number of game receiver'), default=8000)
     parser.add_option('--kd', dest='keyboard_disabled', action='store_true',
                       help='Disable the keyboard so that we can test only one input.', default=False)
 
@@ -911,19 +922,22 @@ def readCommand(argv):
     blueAgents = loadAgents(False, options.blue, nokeyboard, blueArgs)
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
+    role_map = {}
     numKeyboardAgents = 0
     agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
+        role_map.update({agents_enum[index]: index})
         if not val: continue
         args['myrole'] = agents_enum[index]
-        if numKeyboardAgents == 0:
-            agent = keyboardAgents.KeyboardAgent(index)
-        elif numKeyboardAgents == 1:
-            agent = keyboardAgents.KeyboardAgent2(index)
-        else:
-            raise Exception('Max of two keyboard agents supported')
-        numKeyboardAgents += 1
-        args['agents'][index] = agent
+        # if numKeyboardAgents == 0:
+        #     agent = keyboardAgents.KeyboardAgent(index)
+        # elif numKeyboardAgents == 1:
+        #     agent = keyboardAgents.KeyboardAgent2(index)
+        # else:
+        #     raise Exception('Max of two keyboard agents supported')
+        # numKeyboardAgents += 1
+        # args['agents'][index] = agent
+    args['role_map'] = role_map
 
     args['socket_agent'] = []
     numSocketAgents = 0
@@ -956,6 +970,7 @@ def readCommand(argv):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['port'] = options.port
+    args['ip'] = options.ip
     args['keyboard_disabled'] = options.keyboard_disabled
     return args
 
@@ -1026,7 +1041,7 @@ def replayGame(layout, agents, actions, display, length, redTeamName, blueTeamNa
     display.finish()
 
 
-def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName,
+def runGames(layouts, agents, display, length, numGames, record, numTraining, redTeamName, blueTeamName, server,
              muteAgents=False, catchExceptions=False):
     rules = CaptureRules()
     games = []
@@ -1045,7 +1060,8 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
         else:
             gameDisplay = display
             rules.quiet = False
-        g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        g = rules.newGame(layout, agents, gameDisplay, length, server, muteAgents, catchExceptions)
+        server.game = g
         g.run()
         if not beQuiet: games.append(g)
 
@@ -1089,24 +1105,24 @@ if __name__ == '__main__':
 
     > python capture.py --help
     """
-    # options = readCommand(sys.argv[1:])  # Get game components based on input
-    #
-    # server = socketServer(serverID=generateServerID(options['port']), bind_ip='0.0.0.0', port=options['port'])
-    # socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
-    #                                server.message_handler.r2_queue, server.message_handler.b2_queue]
-    # server.start()
-    # del options['port']
-    #
-    # socketAgentIds = options['socket_agent']
-    # for index in socketAgentIds:
-    #     agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
-    #                                      index=index)
-    #     options['agents'][index] = agent
-    # del options['socket_agent']
-    #
-    # game_runner = gameRunner(server=server, options=options)
-    # game_runner.start()
+    options = readCommand(sys.argv[1:])  # Get game components based on input
 
+    server = socketServer(serverID=generateServerID(options['port']), bind_ip=options['ip'], port=options['port'])
+    socket_agent_control_buffer = [server.message_handler.r1_queue, server.message_handler.b1_queue,
+                                   server.message_handler.r2_queue, server.message_handler.b2_queue]
+    server.start()
+    del options['ip']
+    del options['port']
+
+    socketAgentIds = options['socket_agent']
+    for index in socketAgentIds:
+        agent = socketAgents.SocketAgent(command_buffer=socket_agent_control_buffer[index],
+                                         index=index, server=server, display=options['display'])
+        options['agents'][index] = agent
+    del options['socket_agent']
+
+    game_runner = gameRunner(server=server, options=options)
+    game_runner.start()
     # import cProfile
     # cProfile.run('runGames( **options )', 'profile')
 
