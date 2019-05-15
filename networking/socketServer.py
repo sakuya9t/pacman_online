@@ -33,6 +33,7 @@ class socketServer(threading.Thread):
         self.ip = bind_ip
         self.port = port
         self.global_state = None
+        self.display = None
         self.connection_pool = []
         self.node_map = nodeMap()
         self.send_queue = Queue()
@@ -49,7 +50,10 @@ class socketServer(threading.Thread):
         self.sequencer = None
         self.vote_map = {}
         self.decision_map = {}
-        self.vote_thread = voteStateThread(self.vote_map, self.decision_map, self.logger)
+        # use lock to keep atomic I/O operations on the vote map.
+        self.vote_map_lock = threading.Lock()
+        self.vote_thread = voteStateThread(self.vote_map, self.decision_map,
+                                           self.node_map, self.vote_map_lock, self.logger)
         self.sequencer_role = ''
         self.game = None
         self.role_map = None    # a dictionary, key is agent_role, value is agent_index

@@ -8,9 +8,6 @@ from game import Agent
 from game import Directions
 
 
-MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
-
-
 class SocketAgent(Agent):
     """
     An agent controlled by the socket.
@@ -53,12 +50,9 @@ class SocketAgent(Agent):
     # getAction will hold and wait until a message is received. This will
     # stuck the while loop in game.py so that other players cannot move.
     def getAction(self, state):
-        self.multicastGameState()
         self.server.global_state = state
-        legal = state.getLegalActions(self.index)
         root_window = self.display.root_window
-        if self.server.sequencer is None:
-            self.updateGameStateAccordingtoDecision(root_window, state)
+        legal = state.getLegalActions(self.index)
 
         move = Directions.STOP
 
@@ -80,20 +74,3 @@ class SocketAgent(Agent):
         self.lastMove = move
         return move
 
-    def multicastGameState(self):
-        data = self.server.game.state.data
-        seq = self.server.sequencer
-        if seq is not None and data is not None:
-            data_dump = data.json()
-            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
-
-    def updateGameStateAccordingtoDecision(self, root_window, state):
-        curr_time = state.data.timeleft
-        decision_map = self.server.decision_map
-        while True:
-            if curr_time in decision_map.keys():
-                # todo: unpack decision and update self.server.game.state.data
-                del decision_map[curr_time]
-                break
-            root_window.update()
-            time.sleep(0.01)

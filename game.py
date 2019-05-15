@@ -19,6 +19,7 @@
 # purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
+from threading import Lock
 
 # COMP90020 Distributed Algorithms project
 # Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
@@ -32,6 +33,9 @@ import time, os
 import traceback
 import sys
 import json
+
+
+MESSAGE_TYPE_GAME_STATE = 'sync_game_state'
 
 
 #######################
@@ -563,7 +567,7 @@ class Game:
     The Game manages the control flow, soliciting actions from agents.
     """
 
-    def __init__(self, agents, display, rules, startingIndex=0, muteAgents=False, catchExceptions=False):
+    def __init__(self, agents, display, rules, server, startingIndex=0, muteAgents=False, catchExceptions=False):
         self.agentCrashed = False
         self.agents = agents
         self.display = display
@@ -576,6 +580,7 @@ class Game:
         self.totalAgentTimes = [0 for agent in agents]
         self.totalAgentTimeWarnings = [0 for agent in agents]
         self.agentTimeout = False
+        self.server = server
         import cStringIO
         self.agentOutput = [cStringIO.StringIO() for agent in agents]
 
@@ -751,8 +756,14 @@ class Game:
             else:
                 self.state = self.state.generateSuccessor(agentIndex, action)
 
+            self.multicastGameState()
+
+            if self.server.sequencer is None:
+                self.updateGameStateAccordingtoDecision(self.display.root_window, self.state)
+
             # Change the display
             self.display.update(self.state.data)
+
             ###idx = agentIndex - agentIndex % 2 + 1
             ###self.display.update( self.state.makeObservation(idx).data )
 
@@ -779,3 +790,47 @@ class Game:
                     self.unmute()
                     return
         self.display.finish()
+
+
+    def multicastGameState(self):
+        data = self.state.data
+        seq = self.server.sequencer
+        if seq is not None and data is not None:
+            data_dump = data.json()
+            self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
+
+    def updateGameStateAccordingtoDecision(self, root_window, state):
+        curr_time = state.data.timeleft
+        decision_map = self.server.decision_map
+        count = 0
+        while True:
+            # if timeout in 2 seconds, no synchronize
+            if count > 200:
+                break
+            if curr_time in decision_map.keys():
+                # unpack decision and update self.server.game.state.data
+                data = self.state.data
+                received_data = decision_map[curr_time]
+                data.score = received_data['score']
+                data.timeleft = received_data['timeleft']
+                data.food.data = received_data['food']['data']
+                data.capsules = received_data['capsules']
+                for agent_id in range(4):
+                    agent_state = data.agentStates[agent_id]
+                    recv_agent_state = received_data['agentStates'][agent_id]
+                    if agent_state.isPacman != recv_agent_state['isPacman']:
+                        agent_state.isPacman = recv_agent_state['isPacman']
+                    if agent_state.scaredTimer != recv_agent_state['scaredTimer']:
+                        agent_state.scaredTimer = recv_agent_state['scaredTimer']
+                    if agent_state.numCarrying != recv_agent_state['numCarrying']:
+                        agent_state.numCarrying = recv_agent_state['numCarrying']
+                    if agent_state.numReturned != recv_agent_state['numReturned']:
+                        agent_state.numReturned = recv_agent_state['numReturned']
+                #     agent_state.configuration.direction = recv_agent_state['configuration']['direction']
+                #     posx, posy = recv_agent_state['configuration']['pos']
+                #     agent_state.configuration.pos = (posx, posy)
+                del decision_map[curr_time]
+                break
+            root_window.update()
+            time.sleep(0.01)
+            count += 1
