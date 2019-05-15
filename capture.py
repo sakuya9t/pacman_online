@@ -376,12 +376,12 @@ class CaptureRules:
     def __init__(self, quiet=False):
         self.quiet = quiet
 
-    def newGame(self, layout, agents, display, length, muteAgents, catchExceptions):
+    def newGame(self, layout, agents, display, length, server, muteAgents, catchExceptions):
         initState = GameState()
         initState.initialize(layout, len(agents))
         starter = random.randint(0, 1)
         print('%s team starts' % ['Red', 'Blue'][starter])
-        game = Game(agents, display, self, startingIndex=starter, muteAgents=muteAgents,
+        game = Game(agents, display, self, server, startingIndex=starter, muteAgents=muteAgents,
                     catchExceptions=catchExceptions)
         game.state = initState
         game.length = length
@@ -1046,7 +1046,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
         else:
             gameDisplay = display
             rules.quiet = False
-        g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        g = rules.newGame(layout, agents, gameDisplay, length, server, muteAgents, catchExceptions)
         server.game = g
         g.run()
         if not beQuiet: games.append(g)

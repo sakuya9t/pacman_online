@@ -112,7 +112,7 @@ class messageHandler(threading.Thread):
 
                 elif msg_type == MESSAGE_TYPE_HOLDBACK:
                     msg = msg['msg']  # text
-                    self.logger.info("{message}".format(message=msg))
+                    # self.logger.info("{message}".format(message=msg))
                     agent, msg_count, direction = msg['agent'], msg['msg_count'], msg['direction']
                     msg_id = (agent, msg_count)
                     self.holdback_queue.update({msg_id: direction})
@@ -209,6 +209,7 @@ class messageHandler(threading.Thread):
                     self.logger.info("Election rejected by {agent}.".format(agent=agent))
 
                 else:
+                    print 'a'
                     self.logger.info(msg)
 
             except Exception as e:

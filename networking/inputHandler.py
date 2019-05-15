@@ -14,8 +14,11 @@ class inputHandler(threading.Thread):
 
     def run(self):
         while self.alive:
-            message = raw_input()
-            self.buffer.push({'msg': message})
+            try:
+                message = raw_input()
+                self.buffer.push({'msg': message})
+            except:
+                pass
 
     def key_press(self, key):
         try:
