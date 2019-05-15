@@ -450,7 +450,7 @@ class GameStateData:
         return copiedStates
 
     def json(self):
-        obj = {'agentStates': list(map(lambda x: x.json(), self.agentStates)), 'food': self.food.json(),
+        obj = {'agentStates': list(map(lambda x: x.json(), self.agentStates)),
                'capsules': self.capsules, 'score': self.score, 'timeleft': self.timeleft}
         return json.dumps(obj)
 
@@ -813,7 +813,6 @@ class Game:
                 received_data = decision_map[curr_time]
                 data.score = received_data['score']
                 data.timeleft = received_data['timeleft']
-                data.food.data = received_data['food']['data']
                 data.capsules = received_data['capsules']
                 for agent_id in range(4):
                     agent_state = data.agentStates[agent_id]
