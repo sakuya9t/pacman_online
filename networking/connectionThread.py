@@ -49,7 +49,7 @@ class connectionThread(threading.Thread):
         try:
             self.connection.sendall(message)
         except Exception as e:
-            self.logger.err("Send message error: " + str(e))
+            self.logger.error("Send message error: " + str(e))
 
     def complete_callback(self):
         self.setDeath(self.client_ip, self.client_port)
