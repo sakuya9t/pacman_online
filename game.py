@@ -819,7 +819,6 @@ class Game:
                         agent_state.numCarrying = recv_agent_state['numCarrying']
                     if agent_state.numReturned != recv_agent_state['numReturned']:
                         agent_state.numReturned = recv_agent_state['numReturned']
-                    print(agent_state.configuration.direction == recv_agent_state['configuration']['direction'])
                 #     agent_state.configuration.direction = recv_agent_state['configuration']['direction']
                 #     posx, posy = recv_agent_state['configuration']['pos']
                 #     agent_state.configuration.pos = (posx, posy)
