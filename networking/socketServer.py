@@ -186,8 +186,8 @@ class messageSendingQueueThread(threading.Thread):
 
     def run(self):
         while self.alive:
+            time.sleep(0.05)
             if self.queue.isEmpty():
-                time.sleep(0.02)
                 continue
             msg = self.queue.pop()
             target_addr = (msg['ip'], msg['port'])
