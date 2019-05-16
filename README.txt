@@ -1,5 +1,5 @@
 COMP90020 Distributed Algorithms project
-Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901\
+Author: //Hidden//
 
 ------------------------------------------------------------------
 changed files:
