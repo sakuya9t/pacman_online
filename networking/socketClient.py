@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import random
 import socket
 import threading
@@ -10,6 +13,10 @@ MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 
 
 class socketClient(threading.Thread):
+    """
+    client class for socket connections
+    # only used when testing, not functional in four-nodes network.
+    """
     def __init__(self, send_buf, recv_buf, server_ip, server_port, agent_id):
         super(socketClient, self).__init__()
         self.server_ip = server_ip

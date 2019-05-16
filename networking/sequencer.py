@@ -1,3 +1,6 @@
+# COMP90020 Distributed Algorithms project
+# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
 import threading
 import time
 import json
@@ -6,11 +9,16 @@ MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 
 
 class Sequencer(threading.Thread):
+    """
+    The Sequencer class is responsible for the total ordering of agent control messages.
+    The Sequencer will assign a group sequence number to every control messages and
+    the processes will deliver the messages according to the group sequence number.
+    """
     def __init__(self, seq_queue, server):
         super(Sequencer, self).__init__()
         self.seq_queue = seq_queue
         self.server = server
-        self.g_seq = 0
+        self.g_seq = 0  # group sequence number
         self.alive = True
 
     def run(self):

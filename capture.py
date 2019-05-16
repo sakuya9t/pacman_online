@@ -21,6 +21,23 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
 """
+COMP90020 Distributed Algorithms project
+@Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
+@Notes:
+    Basic game framework is created by The Pacman AI projects (UC Berkeley), all methods modified
+    by our group will be noted. (by searching "Modified" keyword)
+
+@Desc:
+    The pacman project is transformed into a distributed, peer-to-peer game system
+    where multiple keyboard (human) agents can compete against each other over the network.
+    To minimize the change to the original game rules logic, the main role of this file
+    is only to create the Server thread and the GameRunner thread. The GameThread maintains
+    the logic for our P2P system to run.
+"""
+
+
+"""
 Capture.py holds the logic for Pacman capture the flag.
 
   (i)  Your interface to the pacman world:
@@ -376,12 +393,12 @@ class CaptureRules:
     def __init__(self, quiet=False):
         self.quiet = quiet
 
-    def newGame(self, layout, agents, display, length, muteAgents, catchExceptions):
+    def newGame(self, layout, agents, display, length, server, muteAgents, catchExceptions):
         initState = GameState()
         initState.initialize(layout, len(agents))
         starter = random.randint(0, 1)
         print('%s team starts' % ['Red', 'Blue'][starter])
-        game = Game(agents, display, self, startingIndex=starter, muteAgents=muteAgents,
+        game = Game(agents, display, self, server, startingIndex=starter, muteAgents=muteAgents,
                     catchExceptions=catchExceptions)
         game.state = initState
         game.length = length
@@ -908,9 +925,11 @@ def readCommand(argv):
     blueAgents = loadAgents(False, options.blue, nokeyboard, blueArgs)
     args['agents'] = sum([list(el) for el in zip(redAgents, blueAgents)], [])  # list of agents
 
+    role_map = {}
     numKeyboardAgents = 0
     agents_enum = ['R1', 'B1', 'R2', 'B2']
     for index, val in enumerate([options.keys0, options.keys1, options.keys2, options.keys3]):
+        role_map.update({agents_enum[index]: index})
         if not val: continue
         args['myrole'] = agents_enum[index]
         # if numKeyboardAgents == 0:
@@ -921,7 +940,9 @@ def readCommand(argv):
         #     raise Exception('Max of two keyboard agents supported')
         # numKeyboardAgents += 1
         # args['agents'][index] = agent
+    args['role_map'] = role_map
 
+    # Modified start
     args['socket_agent'] = []
     numSocketAgents = 0
     for index, val in enumerate([options.soc0, options.soc1, options.soc2, options.soc3]):
@@ -929,6 +950,7 @@ def readCommand(argv):
             continue
         args['socket_agent'].append(index)
         numSocketAgents += 1
+    # Modified end
 
     # Choose a layout
     import layout
@@ -1043,7 +1065,7 @@ def runGames(layouts, agents, display, length, numGames, record, numTraining, re
         else:
             gameDisplay = display
             rules.quiet = False
-        g = rules.newGame(layout, agents, gameDisplay, length, muteAgents, catchExceptions)
+        g = rules.newGame(layout, agents, gameDisplay, length, server, muteAgents, catchExceptions)
         server.game = g
         g.run()
         if not beQuiet: games.append(g)
@@ -1088,6 +1110,11 @@ if __name__ == '__main__':
     See the usage string for more details.
   
     > python capture.py --help
+    
+    @Modified
+    @Desc:
+        We changed this function so that instead of starting the game immediately, it first start a server to
+        listen to all incoming connections, then uses a gamerunner to manage console commands.
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 
