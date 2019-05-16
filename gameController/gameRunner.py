@@ -1,9 +1,13 @@
-# COMP90020 Distributed Algorithms project
-# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
-#
-# gameRunner.py contains the main logic for our distributed system to run. It is
-# responsible for connection, game start, election of sequencer, and sending agent
-# control message during the game.
+"""
+COMP90020 Distributed Algorithms project
+Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
+gameRunner.py contains the main logic for our distributed system to run. It is
+responsible for connection, game start, election of sequencer, and sending agent
+control message during the game.
+
+Receives command and keyboard arrow events, trigger for major game events.
+"""
 
 import json
 import thread
@@ -63,6 +67,10 @@ class gameRunner(threading.Thread):
                 self.handleArrowControl(msg['key'])
         os._exit(0)
 
+    """
+    Logic when typed some commands through command line.
+    We use this to control game flow.
+    """
     def handleMessage(self, msg):
         try:
             # >gamestart
@@ -95,6 +103,7 @@ class gameRunner(threading.Thread):
                         for address in higher_id_node:
                             self.server.sendMsg(address, MESSAGE_TYPE_ELECTION, message)
 
+            # Make current node connect to some node
             # >connect 127.0.0.1 8080
             elif 'connect' in msg:
                 if self.role == '':
@@ -105,17 +114,22 @@ class gameRunner(threading.Thread):
                 ip_addr, port = connection_args[1], int(connection_args[2])
                 self.connect(ip_addr, port)
 
+            # Set the role of current node.
+            # Role auto set with "--keysX" args, but can be changed here.
             # >setrole B1
             elif 'setrole' in msg:
                 args = msg.split(' ')
                 self.role = args[1]
                 self.server.role = self.role
 
+            # Send a normal message to ip:port
             # >send 127.0.0.1 8080 "You are a pacman."
             elif 'send' in msg:
                 args = msg.split(' ')
                 self.server.sendMsg((args[1], args[2]), MESSAGE_TYPE_NORMAL_MESSAGE, args[3])
 
+            # Set ready state for the game.
+            # Not functional currently.
             # > get ready for the game.
             elif 'ready' == msg:
                 self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GET_READY, {"agent": self.role})
@@ -135,6 +149,9 @@ class gameRunner(threading.Thread):
         except Exception as e:
             self.logger.error("Input parsing error: {msg}".format(msg=e.message))
 
+    """
+    Things happen when I press arrow keys after game starts.
+    """
     def handleArrowControl(self, key):
         if not self.started:
             return
@@ -160,6 +177,9 @@ class gameRunner(threading.Thread):
         except Exception as e:
             self.logger.error("Error in handle arrow control event: {msg}".format(msg=e.message))
 
+    """
+    Initial connection when local node try to connect into the network.
+    """
     def connect(self, ip, port):
         self.server.activeConnect(ip, port)
         existing_server_list = self.server.node_map.get_all_servers()
@@ -182,6 +202,10 @@ class gameRunner(threading.Thread):
         if key in list(self.options.keys()):
             del self.options[key]
 
+    """
+    Built-in run game function, used to in capture.py
+    We moved it to here so we can manage game run flow with commands.
+    """
     def runGame(self):
         from capture import runGames, save_score
         self.options['server'] = self.server
@@ -190,6 +214,7 @@ class gameRunner(threading.Thread):
         save_score(games[0])
 
     # a fake control message send to myself
+    # Pretend that someone sends me a message so that I can treat every socketagent equally.
     def makeFakeControlMessage(self, message):
         # return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_CONTROL_AGENT, 'msg': message})}
         return {'ip': 'me', 'port': 'me', 'message': json.dumps({'type': MESSAGE_TYPE_HOLDBACK, 'msg': message})}

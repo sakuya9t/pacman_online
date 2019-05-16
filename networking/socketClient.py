@@ -15,6 +15,7 @@ MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 class socketClient(threading.Thread):
     """
     client class for socket connections
+    # only used when testing, not functional in four-nodes network.
     """
     def __init__(self, send_buf, recv_buf, server_ip, server_port, agent_id):
         super(socketClient, self).__init__()

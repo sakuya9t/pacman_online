@@ -1,5 +1,12 @@
-# COMP90020 Distributed Algorithms project
-# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+"""
+COMP90020 Distributed Algorithms project
+Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
+Desc:
+    Major control for Lamport-Shostak-Pease's Algorithm.
+    Collects votes and make decisions.
+    If some peers dropped, will make decisions with less nodes.
+"""
 
 import threading
 import time
@@ -42,6 +49,10 @@ class voteStateThread(threading.Thread):
         self.alive = False
 
 
+"""
+Make decision according to extant votes.
+Self state also counts as one vote.
+"""
 def decide(votes):
     if len(votes) == 0:
         return "null"

@@ -1,5 +1,10 @@
-# COMP90020 Distributed Algorithms project
-# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+"""
+    COMP90020 Distributed Algorithms project
+
+    Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+    Description:
+        Main logic handling all incoming messages.
+"""
 
 import threading
 import json
@@ -7,6 +12,9 @@ import time
 
 from util import Queue, PriorityQueue
 
+"""
+Define constant message types.
+"""
 MESSAGE_TYPE_CONNECT_TO_SERVER = 'cli_conn'
 MESSAGE_TYPE_CONTROL_AGENT = 'game_ctl'
 MESSAGE_TYPE_NORMAL_MESSAGE = 'normal_message'
@@ -68,6 +76,10 @@ class messageHandler(threading.Thread):
                 my_serverip, my_serverport, my_role = self.server.ip, self.server.port, self.server.role
 
                 if msg_type == MESSAGE_TYPE_CONNECT_TO_SERVER:
+                    """
+                    When server receives connection request. it will send back self server info.
+                    """
+
                     self.logger.info("Received connection request from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
 
@@ -96,6 +108,9 @@ class messageHandler(threading.Thread):
                                              'agent_id': my_role})
 
                 elif msg_type == MESSAGE_TYPE_CONNECT_CONFIRM:
+                    """
+                    When receives the send-back server info, source node saves target server info (role).
+                    """
                     self.logger.info("Received connection confirmation from {ip}:{port}: {message}."
                                      .format(ip=source_ip, port=source_port, message=msg['msg']))
                     msg = msg['msg']
@@ -106,9 +121,11 @@ class messageHandler(threading.Thread):
                         self.logger.info("Node map changed: {node_map}".format(node_map=node_map))
 
                 elif msg_type == MESSAGE_TYPE_EXISTING_NODES:
-                    # Some nodes are already existed, I get this message because I am connecting to one of them.
-                    # Then I am required to connect to all the rest ones.
-                    # Used for when 3rd or 4th node joins in.
+                    """
+                    Some nodes are already existed, I get this message because I am connecting to one of them.
+                    Then I am required to connect to all the rest ones.
+                    Used for when 3rd or 4th node joins in.
+                    """
                     server_list = msg['msg']
                     self.logger.info("Received a request to connect to the following servers: {servers}"
                                      .format(servers=server_list))

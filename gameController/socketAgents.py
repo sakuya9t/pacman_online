@@ -10,7 +10,7 @@ from game import Directions
 
 class SocketAgent(Agent):
     """
-    An agent controlled by the socket.
+    An online agent controlled by the socket.
     """
 
     def __init__(self, command_buffer, index, server, display):

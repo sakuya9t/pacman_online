@@ -20,15 +20,22 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
+"""
+COMP90020 Distributed Algorithms project
+@Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
 
-# COMP90020 Distributed Algorithms project
-# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
-#
-# The pacman project is transformed into a distributed, peer-to-peer game system
-# where multiple keyboard (human) agents can compete against each other over the network.
-# To minimize the change to the original game rules logic, the main role of this file
-# is only to create the Server thread and the GameRunner thread. The GameThread maintains
-# the logic for our P2P system to run.
+@Notes:
+    Basic game framework is created by The Pacman AI projects (UC Berkeley), all methods modified
+    by our group will be noted. (by searching "Modified" keyword)
+
+@Desc:
+    The pacman project is transformed into a distributed, peer-to-peer game system
+    where multiple keyboard (human) agents can compete against each other over the network.
+    To minimize the change to the original game rules logic, the main role of this file
+    is only to create the Server thread and the GameRunner thread. The GameThread maintains
+    the logic for our P2P system to run.
+"""
+
 
 """
 Capture.py holds the logic for Pacman capture the flag.
@@ -935,6 +942,7 @@ def readCommand(argv):
         # args['agents'][index] = agent
     args['role_map'] = role_map
 
+    # Modified start
     args['socket_agent'] = []
     numSocketAgents = 0
     for index, val in enumerate([options.soc0, options.soc1, options.soc2, options.soc3]):
@@ -942,6 +950,7 @@ def readCommand(argv):
             continue
         args['socket_agent'].append(index)
         numSocketAgents += 1
+    # Modified end
 
     # Choose a layout
     import layout
@@ -1101,6 +1110,11 @@ if __name__ == '__main__':
     See the usage string for more details.
   
     > python capture.py --help
+    
+    @Modified
+    @Desc:
+        We changed this function so that instead of starting the game immediately, it first start a server to
+        listen to all incoming connections, then uses a gamerunner to manage console commands.
     """
     options = readCommand(sys.argv[1:])  # Get game components based on input
 

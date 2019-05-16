@@ -21,12 +21,20 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 from threading import Lock
 
-# COMP90020 Distributed Algorithms project
-# Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
-#
-# The pacman project is transformed into a distributed, peer-to-peer game system
-# where multiple keyboard (human) agents can compete against each other over the network.
-# The game logic of this file is slightly modified to cope with our system.
+"""
+COMP90020 Distributed Algorithms project
+@Author: Zijian Wang 950618, Nai Wang 927209, Leewei Kuo 932975, Ivan Chee 736901
+
+@Desc:
+    The pacman project is transformed into a distributed, peer-to-peer game system
+    where multiple keyboard (human) agents can compete against each other over the network.
+    The game logic of this file is slightly modified to cope with our system.
+    
+@Notes:
+    Basic game framework is created by The Pacman AI projects (UC Berkeley), all methods modified
+    by our group will be noted. (by searching "Modified" keyword)
+"""
+
 
 from util import *
 import time, os
@@ -119,6 +127,11 @@ class Configuration:
         return "(x,y)=" + str(self.pos) + ", " + str(self.direction)
 
     def json(self):
+        """
+        Modified.
+        Package function used to make vote message.
+        :return: json formatted.
+        """
         obj = {'direction': self.direction, 'pos': self.pos}
         return obj
 
@@ -166,6 +179,11 @@ class AgentState:
         return hash(hash(self.configuration) + 13 * hash(self.scaredTimer))
 
     def json(self):
+        """
+        Modified.
+        Package function used to make vote message.
+        :return: json formatted.
+        """
         obj = {'configuration': self.configuration.json(), 'isPacman': self.isPacman, 'numCarrying': self.numCarrying,
                'numReturned': self.numReturned, 'scaredTimer': self.scaredTimer}
         return obj
@@ -232,6 +250,11 @@ class Grid:
         return hash(h)
 
     def json(self):
+        """
+        Modified.
+        Package function used to make vote message.
+        :return: json formatted.
+        """
         json_obj = {'data': self.data}
         return json_obj
 
@@ -450,6 +473,11 @@ class GameStateData:
         return copiedStates
 
     def json(self):
+        """
+        Modified.
+        Package function used to make vote message.
+        :return: json formatted.
+        """
         obj = {'agentStates': list(map(lambda x: x.json(), self.agentStates)),
                'capsules': self.capsules, 'score': self.score, 'timeleft': self.timeleft}
         return json.dumps(obj)
@@ -756,10 +784,15 @@ class Game:
             else:
                 self.state = self.state.generateSuccessor(agentIndex, action)
 
+            # Modified start
+            """
+            Add step for updating local data with decision made in Lamport-Shostak-Pease's Algorithm.
+            """
             self.multicastGameState()
 
             if self.server.sequencer is None:
                 self.updateGameStateAccordingtoDecision(self.display.root_window, self.state)
+            # Modified end
 
             # Change the display
             self.display.update(self.state.data)
@@ -791,7 +824,13 @@ class Game:
                     return
         self.display.finish()
 
-
+    '''
+        @Function: multicastGameState
+        @Modefied
+        @Description:
+            Lamport-Shostak-Pease's Algorithm.
+            The general p* packs current game state data and do B-multicast to all peers to start a vote.
+        '''
     def multicastGameState(self):
         data = self.state.data
         seq = self.server.sequencer
@@ -799,6 +838,14 @@ class Game:
             data_dump = data.json()
             self.server.sendToAllOtherPlayers(MESSAGE_TYPE_GAME_STATE, data_dump)
 
+    '''
+    @Function: updateGameStateAccordingtoDecision
+    @Modified
+    @Description:
+        The update step in Lamport-Shostak-Pease's Algorithm:
+        When decision is made, update local game state to keep consistency.
+        ## Not currently updating local game state accordingly.
+    '''
     def updateGameStateAccordingtoDecision(self, root_window, state):
         curr_time = state.data.timeleft
         decision_map = self.server.decision_map
@@ -811,20 +858,20 @@ class Game:
                 # unpack decision and update self.server.game.state.data
                 data = self.state.data
                 received_data = decision_map[curr_time]
-                data.score = received_data['score']
-                data.timeleft = received_data['timeleft']
-                data.capsules = received_data['capsules']
-                for agent_id in range(4):
-                    agent_state = data.agentStates[agent_id]
-                    recv_agent_state = received_data['agentStates'][agent_id]
-                    if agent_state.isPacman != recv_agent_state['isPacman']:
-                        agent_state.isPacman = recv_agent_state['isPacman']
-                    if agent_state.scaredTimer != recv_agent_state['scaredTimer']:
-                        agent_state.scaredTimer = recv_agent_state['scaredTimer']
-                    if agent_state.numCarrying != recv_agent_state['numCarrying']:
-                        agent_state.numCarrying = recv_agent_state['numCarrying']
-                    if agent_state.numReturned != recv_agent_state['numReturned']:
-                        agent_state.numReturned = recv_agent_state['numReturned']
+                # data.score = received_data['score']
+                # data.timeleft = received_data['timeleft']
+                # data.capsules = received_data['capsules']
+                # for agent_id in range(4):
+                #     agent_state = data.agentStates[agent_id]
+                #     recv_agent_state = received_data['agentStates'][agent_id]
+                #     if agent_state.isPacman != recv_agent_state['isPacman']:
+                #         agent_state.isPacman = recv_agent_state['isPacman']
+                #     if agent_state.scaredTimer != recv_agent_state['scaredTimer']:
+                #         agent_state.scaredTimer = recv_agent_state['scaredTimer']
+                #     if agent_state.numCarrying != recv_agent_state['numCarrying']:
+                #         agent_state.numCarrying = recv_agent_state['numCarrying']
+                #     if agent_state.numReturned != recv_agent_state['numReturned']:
+                #         agent_state.numReturned = recv_agent_state['numReturned']
                 #     agent_state.configuration.direction = recv_agent_state['configuration']['direction']
                 #     posx, posy = recv_agent_state['configuration']['pos']
                 #     agent_state.configuration.pos = (posx, posy)

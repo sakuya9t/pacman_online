@@ -23,9 +23,10 @@ RECEIVE_BUFFER = 0
 SEND_BUFFER = 1
 CONTROL_BUFFER = 2
 
+
 class socketServer(threading.Thread):
     """
-    The server of each process.
+    The server process of each node.
     """
     def __init__(self, serverID, bind_ip, port):
         super(socketServer, self).__init__()
@@ -75,6 +76,7 @@ class socketServer(threading.Thread):
             connection, addr = server.accept()
             self.passiveConnect(connection, addr)
 
+    # Server actively connect to another node.
     def activeConnect(self, ip, port):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         conn.bind((self.ip, 0))
@@ -85,6 +87,7 @@ class socketServer(threading.Thread):
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
 
+    # Server receives a connection and connect to the incoming node.
     def passiveConnect(self, connection, addr):
         client_ip, client_port = addr
         logger.info("Detected connection from {ip}:{port}.".format(ip=client_ip, port=client_port))
@@ -93,6 +96,7 @@ class socketServer(threading.Thread):
         self.conn_id += 1
         self.connection_pool.append(connection_thread)
 
+    # Server send a single message to a peer.
     def sendMsg(self, addr, msg_type, msg):
         target_ip, target_port = addr
         msg_packet = {'ip': target_ip, 'port': int(target_port), 'type': msg_type, 'msg': msg}
@@ -100,27 +104,33 @@ class socketServer(threading.Thread):
         if msg_packet is not None and json.dumps(msg_packet) != "[]":
             self.send_queue.push(msg_packet)
 
+    # B-multicast to all peers.
     def sendToAllOtherPlayers(self, msg_type, msg):
         # logger.info("Send message to all other players: {msg}".format(msg=msg))
         for node in self.node_map.get_all_nodes():
             ip, port = node['ip'], node['port']
             self.sendMsg((ip, port), msg_type, msg)
 
+    # B-multicast, but not to p*.
     def multicastToNonSequencer(self, msg_type, msg):
         for node in self.node_map.get_all_nodes():
             ip, port, role = node['ip'], node['port'], node['agent']
             if role != self.sequencer_role:
                 self.sendMsg((ip, port), msg_type, msg)
 
+    # append a node into node map
     def appendNodeMap(self, ip, port, server_ip, server_port, role, status):
         self.node_map.append(ip, port, server_ip, server_port, role, status)
 
+    # modify node map info
     def updateNodeMap(self, ip, port, server_ip, server_port, role, status):
         self.node_map.update(ip, port, server_ip, server_port, role, status)
 
+    # remove a node from node map
     def removeNodeMap(self, ip, port):
         self.node_map.remove(ip, port)
 
+    # exit function
     def join(self, timeout=None):
         self.logger.info("Server terminating...")
         self.alive = False
@@ -134,6 +144,7 @@ class socketServer(threading.Thread):
             self.sequencer.exit()
         self.vote_thread.join()
 
+    # build up a new sequencer
     def createSequencer(self):
         self.sequencer = Sequencer(self.message_handler.seq_queue, self)
         self.sequencer.start()
@@ -150,6 +161,7 @@ class socketServer(threading.Thread):
             index = self.role_map[role]
             #  TODO when some node reconnect, set it back to True
             self.life_map[index] = False
+
 
 class connectionRecycleThread(threading.Thread):
     """
